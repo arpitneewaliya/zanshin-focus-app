@@ -1,4 +1,5 @@
-import { Timer, ListTodo, BookOpen, Target } from "lucide-react";
+import Link from "next/link";
+import { Timer, ListTodo, BookOpen, Target, ArrowRight } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -13,7 +14,8 @@ const features = [
     title: "Pomodoro Timer",
     description: "Customizable intervals, break timers, and audio notifications.",
     icon: Timer,
-    status: "Phase 1",
+    status: "Active",
+    href: "/timer",
   },
   {
     id: "tasks",
@@ -21,6 +23,7 @@ const features = [
     description: "Organize priorities, due dates, and track daily focus tasks.",
     icon: ListTodo,
     status: "Phase 2",
+    href: null,
   },
   {
     id: "journal",
@@ -28,6 +31,7 @@ const features = [
     description: "Reflect on work sessions with rich text and markdown entries.",
     icon: BookOpen,
     status: "Phase 3",
+    href: null,
   },
   {
     id: "focus-mode",
@@ -35,6 +39,7 @@ const features = [
     description: "Distraction-free environment with ambient sounds and visual calm.",
     icon: Target,
     status: "Phase 4",
+    href: null,
   },
 ];
 
@@ -55,21 +60,35 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {features.map((feature) => {
           const Icon = feature.icon;
-          return (
+          const isClickable = Boolean(feature.href);
+
+          const cardContent = (
             <Card
-              key={feature.id}
-              className="relative transition-all duration-200 hover:border-foreground/25 hover:shadow-sm"
+              className={`relative transition-all duration-200 ${
+                isClickable
+                  ? "hover:border-primary/50 hover:shadow-md cursor-pointer group"
+                  : "hover:border-foreground/25 hover:shadow-xs"
+              }`}
             >
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-lg bg-muted text-foreground">
+                  <div className="p-2.5 rounded-lg bg-muted text-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                     <Icon className="size-5" />
                   </div>
-                  <CardTitle className="text-lg font-semibold">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-1.5">
                     {feature.title}
+                    {isClickable && (
+                      <ArrowRight className="size-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-primary" />
+                    )}
                   </CardTitle>
                 </div>
-                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground">
+                <span
+                  className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
+                    isClickable
+                      ? "bg-primary/10 text-primary"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
                   {feature.status}
                 </span>
               </CardHeader>
@@ -80,6 +99,16 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           );
+
+          if (isClickable && feature.href) {
+            return (
+              <Link key={feature.id} href={feature.href} className="block">
+                {cardContent}
+              </Link>
+            );
+          }
+
+          return <div key={feature.id}>{cardContent}</div>;
         })}
       </div>
     </div>
