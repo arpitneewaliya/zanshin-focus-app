@@ -30,8 +30,8 @@ const features = [
     title: "Personal Journal",
     description: "Reflect on work sessions with rich text and markdown entries.",
     icon: BookOpen,
-    status: "Phase 3",
-    href: null,
+    status: "Active",
+    href: "/journal",
   },
   {
     id: "focus-mode",
