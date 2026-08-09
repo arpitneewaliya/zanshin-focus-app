@@ -5,6 +5,8 @@ import { Play, Pause, RotateCcw, SkipForward, Settings } from "lucide-react";
 import { useTimerStore } from "@/stores/timerStore";
 import { Button } from "@/components/ui/button";
 
+import { unlockAudioContext } from "@/lib/sound";
+
 interface TimerControlsProps {
   onToggleSettings?: () => void;
   showSettingsToggle?: boolean;
@@ -16,13 +18,32 @@ export function TimerControls({
 }: TimerControlsProps) {
   const { isRunning, start, pause, reset, skip } = useTimerStore();
 
+  const handleStartPause = () => {
+    unlockAudioContext();
+    if (isRunning) {
+      pause();
+    } else {
+      start();
+    }
+  };
+
+  const handleReset = () => {
+    unlockAudioContext();
+    reset();
+  };
+
+  const handleSkip = () => {
+    unlockAudioContext();
+    skip();
+  };
+
   return (
     <div className="flex items-center justify-center gap-3 pt-2">
       {/* Reset Button */}
       <Button
         variant="outline"
         size="icon"
-        onClick={reset}
+        onClick={handleReset}
         title="Reset Timer"
         aria-label="Reset Timer"
         className="rounded-full size-11 text-muted-foreground hover:text-foreground"
@@ -34,7 +55,7 @@ export function TimerControls({
       <Button
         variant="default"
         size="lg"
-        onClick={isRunning ? pause : start}
+        onClick={handleStartPause}
         className="rounded-full px-8 py-6 text-base font-medium shadow-md transition-all active:scale-95"
       >
         {isRunning ? (
@@ -52,7 +73,7 @@ export function TimerControls({
       <Button
         variant="outline"
         size="icon"
-        onClick={skip}
+        onClick={handleSkip}
         title="Skip to next session"
         aria-label="Skip session"
         className="rounded-full size-11 text-muted-foreground hover:text-foreground"

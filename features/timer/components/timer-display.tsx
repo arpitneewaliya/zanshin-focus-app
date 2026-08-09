@@ -91,7 +91,7 @@ export function TimerDisplay() {
           <div className="pt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className="inline-block size-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>
-              Session #{completedSessions + 1}
+              Session {completedSessions + 1}
               {mode === "work" && (
                 <span className="opacity-75">
                   {" "}

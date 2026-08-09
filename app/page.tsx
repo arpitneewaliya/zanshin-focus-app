@@ -22,8 +22,8 @@ const features = [
     title: "Task Manager",
     description: "Organize priorities, due dates, and track daily focus tasks.",
     icon: ListTodo,
-    status: "Phase 2",
-    href: null,
+    status: "Active",
+    href: "/tasks",
   },
   {
     id: "journal",

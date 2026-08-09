@@ -1,17 +1,29 @@
 "use client";
 
 import * as React from "react";
-import { useTimerStore } from "@/stores/timerStore";
-import { playTimerCompletionSound } from "@/lib/sound";
+import { useTimerStore, TimerMode } from "@/stores/timerStore";
+import { playTimerCompletionSound, unlockAudioContext } from "@/lib/sound";
 import { ModeSelector } from "./mode-selector";
 import { TimerDisplay } from "./timer-display";
 import { TimerControls } from "./timer-controls";
 import { TimerSettingsPanel } from "./timer-settings";
+import { TimerNotificationModal } from "./timer-notification";
 import { Card } from "@/components/ui/card";
 
 export function TimerView() {
   const { isRunning, tick, timeLeft, mode } = useTimerStore();
   const [showSettings, setShowSettings] = React.useState(false);
+  const [completedModalMode, setCompletedModalMode] =
+    React.useState<TimerMode | null>(null);
+
+  // Request browser notification permission if available
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        Notification.requestPermission().catch(() => {});
+      }
+    }
+  }, []);
 
   // Timer Ticking Loop
   React.useEffect(() => {
@@ -19,8 +31,30 @@ export function TimerView() {
 
     if (isRunning) {
       interval = setInterval(() => {
-        tick(() => {
+        tick((finishedMode) => {
           playTimerCompletionSound();
+          setCompletedModalMode(finishedMode);
+
+          // Show browser notification if permission granted
+          if (
+            typeof window !== "undefined" &&
+            "Notification" in window &&
+            Notification.permission === "granted"
+          ) {
+            const title =
+              finishedMode === "work"
+                ? "Work Session Completed!"
+                : finishedMode === "shortBreak"
+                ? "Short Break Finished!"
+                : "Long Break Finished!";
+            try {
+              new Notification(title, {
+                body: "Click to return to Zanshin Focus Timer.",
+              });
+            } catch {
+              // Ignore notification constructor errors
+            }
+          }
         });
       }, 1000);
     }
@@ -58,7 +92,10 @@ export function TimerView() {
         <ModeSelector />
         <TimerDisplay />
         <TimerControls
-          onToggleSettings={() => setShowSettings((prev) => !prev)}
+          onToggleSettings={() => {
+            unlockAudioContext();
+            setShowSettings((prev) => !prev);
+          }}
         />
       </Card>
 
@@ -68,6 +105,12 @@ export function TimerView() {
           <TimerSettingsPanel onClose={() => setShowSettings(false)} />
         </div>
       )}
+
+      {/* Timer Session Completion Notification Modal */}
+      <TimerNotificationModal
+        completedMode={completedModalMode}
+        onClose={() => setCompletedModalMode(null)}
+      />
     </div>
   );
 }

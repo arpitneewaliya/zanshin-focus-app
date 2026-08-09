@@ -19,7 +19,7 @@ interface TimerState extends TimerSettings {
   start: () => void;
   pause: () => void;
   reset: () => void;
-  tick: (onSessionComplete?: () => void) => void;
+  tick: (onSessionComplete?: (completedMode: TimerMode) => void) => void;
   skip: () => void;
   setMode: (mode: TimerMode) => void;
   updateSettings: (settings: Partial<TimerSettings>) => void;
@@ -70,16 +70,18 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     });
   },
 
-  tick: (onSessionComplete?: () => void) => {
+  tick: (onSessionComplete?: (completedMode: TimerMode) => void) => {
     const state = get();
     if (!state.isRunning) return;
 
     if (state.timeLeft > 1) {
       set({ timeLeft: state.timeLeft - 1 });
     } else {
+      const finishedMode = state.mode;
+
       // Session finished
       if (onSessionComplete) {
-        onSessionComplete();
+        onSessionComplete(finishedMode);
       }
 
       if (state.mode === "work") {
