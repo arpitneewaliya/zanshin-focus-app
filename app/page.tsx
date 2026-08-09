@@ -38,8 +38,8 @@ const features = [
     title: "Focus Mode",
     description: "Distraction-free environment with ambient sounds and visual calm.",
     icon: Target,
-    status: "Phase 4",
-    href: null,
+    status: "Active",
+    href: "/focus-mode",
   },
 ];
 
