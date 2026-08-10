@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useAmbientSound } from "@/features/focus-mode/hooks/use-ambient-sound";
 import { FocusClockDisplay } from "@/features/focus-mode/components/focus-clock-display";
 import { AmbientControls } from "@/features/focus-mode/components/ambient-controls";
+import { FocusSettingsPanel } from "@/features/focus-mode/components/focus-settings-panel";
 import { Button } from "@/components/ui/button";
-import { X, Maximize2, Minimize2, Sparkles, ArrowRight } from "lucide-react";
+import { X, Maximize2, Minimize2, Sparkles, ArrowRight, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { cn } from "@/lib/utils";
 
 export function FocusModeView() {
   const router = useRouter();
@@ -24,7 +26,60 @@ export function FocusModeView() {
   const startTimeRef = useRef<number>(Date.now());
   const [summaryMessage, setSummaryMessage] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [areControlsVisible, setAreControlsVisible] = useState<boolean>(true);
+
   const autoDismissTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Reset inactivity timer to keep controls visible during user activity
+  const handleUserActivity = useCallback(() => {
+    setAreControlsVisible(true);
+
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+
+    // Only set auto-hide timer if settings panel is NOT open
+    if (!isSettingsOpen) {
+      inactivityTimerRef.current = setTimeout(() => {
+        setAreControlsVisible(false);
+      }, 3500);
+    }
+  }, [isSettingsOpen]);
+
+  // Keep controls visible when settings modal is opened
+  useEffect(() => {
+    if (isSettingsOpen) {
+      setAreControlsVisible(true);
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+    } else {
+      handleUserActivity();
+    }
+  }, [isSettingsOpen, handleUserActivity]);
+
+  // Listen to mouse movement and touch events for auto-hiding controls
+  useEffect(() => {
+    const onActivity = () => handleUserActivity();
+
+    window.addEventListener("mousemove", onActivity);
+    window.addEventListener("touchstart", onActivity);
+    window.addEventListener("keydown", onActivity);
+
+    // Initial timer setup
+    handleUserActivity();
+
+    return () => {
+      window.removeEventListener("mousemove", onActivity);
+      window.removeEventListener("touchstart", onActivity);
+      window.removeEventListener("keydown", onActivity);
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+    };
+  }, [handleUserActivity]);
 
   // Fullscreen change listener
   useEffect(() => {
@@ -79,19 +134,16 @@ export function FocusModeView() {
 
   // Handle Exit Focus Trigger
   const handleExit = useCallback(() => {
-    // If summary is already displaying, dismiss it immediately
     if (summaryMessage) {
       navigateToDashboard();
       return;
     }
 
-    // Stop ambient sounds & exit browser fullscreen immediately
     stopAll();
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     }
 
-    // Calculate elapsed duration
     const elapsedMs = Date.now() - startTimeRef.current;
     const totalSeconds = Math.max(1, Math.floor(elapsedMs / 1000));
     
@@ -105,7 +157,6 @@ export function FocusModeView() {
 
     setSummaryMessage(msg);
 
-    // Auto-dismiss summary after 3.5 seconds
     autoDismissTimerRef.current = setTimeout(() => {
       navigateToDashboard();
     }, 3500);
@@ -124,11 +175,10 @@ export function FocusModeView() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (summaryMessage) {
-        // Any keypress dismisses the summary dialog
         navigateToDashboard();
         return;
       }
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && !isSettingsOpen) {
         handleExit();
       }
     };
@@ -137,7 +187,7 @@ export function FocusModeView() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [summaryMessage, handleExit, navigateToDashboard]);
+  }, [summaryMessage, isSettingsOpen, handleExit, navigateToDashboard]);
 
   return (
     <motion.div
@@ -161,8 +211,15 @@ export function FocusModeView() {
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[600px] bg-primary/10 rounded-full blur-3xl pointer-events-none"
       />
 
-      {/* Top Header Bar: Branding, Fullscreen Toggle & Exit */}
-      <div className="relative z-10 flex items-center justify-between">
+      {/* Top Header Bar: Branding, Settings, Fullscreen & Exit */}
+      <div
+        className={cn(
+          "relative z-10 flex items-center justify-between transition-opacity duration-500",
+          areControlsVisible || isSettingsOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        )}
+      >
         <div className="flex items-center gap-2.5">
           <span className="size-2 rounded-full bg-primary animate-pulse" />
           <span className="text-xs sm:text-sm font-medium tracking-wider uppercase text-muted-foreground">
@@ -172,6 +229,18 @@ export function FocusModeView() {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
+          {/* Settings Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSettingsOpen(true)}
+            title="Focus Settings"
+            className="gap-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+          >
+            <Settings className="size-4" />
+            <span className="hidden sm:inline">Settings</span>
+          </Button>
+
           {/* Fullscreen Toggle Button */}
           <Button
             variant="ghost"
@@ -208,8 +277,15 @@ export function FocusModeView() {
         <FocusClockDisplay />
       </div>
 
-      {/* Bottom Ambient Audio Controls */}
-      <div className="relative z-10 w-full pt-4">
+      {/* Bottom Ambient Audio Controls (Auto-hides on inactivity) */}
+      <div
+        className={cn(
+          "relative z-10 w-full pt-4 transition-opacity duration-500",
+          areControlsVisible || isSettingsOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        )}
+      >
         <AmbientControls
           selectedSound={selectedSound}
           onSelectSound={setSelectedSound}
@@ -219,6 +295,12 @@ export function FocusModeView() {
           onToggleMute={toggleMute}
         />
       </div>
+
+      {/* Focus Settings Panel */}
+      <FocusSettingsPanel
+        isOpen={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+      />
 
       {/* Focus Session Exit Summary Modal */}
       <AnimatePresence>
@@ -238,7 +320,6 @@ export function FocusModeView() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-md bg-card border border-border/60 rounded-3xl p-8 shadow-2xl text-center space-y-6 select-none relative overflow-hidden"
             >
-              {/* Subtle top accent gradient */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1 bg-gradient-to-r from-transparent via-primary to-transparent" />
 
               <div className="size-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto shadow-xs">
@@ -254,7 +335,6 @@ export function FocusModeView() {
                 </p>
               </div>
 
-              {/* Auto-dismiss countdown bar */}
               <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: "100%" }}
@@ -278,4 +358,3 @@ export function FocusModeView() {
     </motion.div>
   );
 }
-
