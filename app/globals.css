@@ -121,6 +121,15 @@
   * {
     @apply border-border outline-ring/50;
   }
+  ::selection {
+    background-color: oklch(0.145 0 0);
+    color: oklch(1 0 0);
+  }
+  .dark ::selection,
+  [data-theme="dark"] ::selection {
+    background-color: oklch(0.985 0 0);
+    color: oklch(0.145 0 0);
+  }
   body {
     @apply bg-background text-foreground;
   }
