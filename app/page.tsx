@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Timer, ListTodo, BookOpen, Target, ArrowRight } from "lucide-react";
+import { Timer, ListTodo, BookOpen, Target, Flame, ArrowRight } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -24,6 +24,14 @@ const features = [
     icon: ListTodo,
     status: "Active",
     href: "/tasks",
+  },
+  {
+    id: "habits",
+    title: "Habit Tracker",
+    description: "Track daily routines with calendar heatmaps and streak counters.",
+    icon: Flame,
+    status: "Active",
+    href: "/habit-tracker",
   },
   {
     id: "journal",
