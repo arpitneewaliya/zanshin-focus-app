@@ -93,16 +93,7 @@ export function FocusModeView() {
     };
   }, []);
 
-  // Request browser fullscreen on mount (with graceful error handling if blocked by browser policy)
-  useEffect(() => {
-    if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-      document.documentElement.requestFullscreen().then(() => {
-        setIsFullscreen(true);
-      }).catch((err) => {
-        console.warn("Browser fullscreen request blocked or not supported:", err);
-      });
-    }
-  }, []);
+
 
   const toggleFullscreen = useCallback(() => {
     if (!document.fullscreenElement) {

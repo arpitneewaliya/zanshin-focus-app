@@ -71,7 +71,6 @@ export const useMusicPlayerStore = create<MusicPlayerState>()(
         if (!currentTrack || queue.length === 0) return;
 
         if (repeatMode === "one") {
-          // Re-trigger current track from 0
           set({ progress: 0, seekRequest: 0, isPlaying: true });
           return;
         }
@@ -91,7 +90,6 @@ export const useMusicPlayerStore = create<MusicPlayerState>()(
           if (repeatMode === "all") {
             nextIndex = 0;
           } else {
-            // End of queue in "off" mode
             set({ isPlaying: false, progress: 0 });
             return;
           }
@@ -109,7 +107,6 @@ export const useMusicPlayerStore = create<MusicPlayerState>()(
         const { currentTrack, queue, progress } = get();
         if (!currentTrack || queue.length === 0) return;
 
-        // If played more than 3s, restart track
         if (progress > 3) {
           set({ progress: 0, seekRequest: 0 });
           return;
@@ -172,7 +169,6 @@ export const useMusicPlayerStore = create<MusicPlayerState>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
-          // Restore track object from ID after rehydration
           const restoredId = (state as unknown as { currentTrackId?: string }).currentTrackId;
           if (restoredId) {
             const foundTrack = TRACKS.find((t) => t.id === restoredId);
@@ -180,7 +176,6 @@ export const useMusicPlayerStore = create<MusicPlayerState>()(
               state.currentTrack = foundTrack;
             }
           }
-          // Never start playing automatically on page rehydration
           state.isPlaying = false;
         }
       },

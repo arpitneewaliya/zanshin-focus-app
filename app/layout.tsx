@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { GlobalMusicPlayer } from "@/features/music-player/components/GlobalMusicPlayer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,8 +20,6 @@ export const metadata: Metadata = {
   title: "Zanshin Focus",
   description: "Minimalist, distraction-free productivity workspace combining Pomodoro Timer, Task Manager, Personal Journal, and Focus Mode.",
 };
-
-import { GlobalMusicPlayer } from "@/features/music-player/components/GlobalMusicPlayer";
 
 export default function RootLayout({
   children,
@@ -60,4 +59,3 @@ export default function RootLayout({
     </html>
   );
 }
-
