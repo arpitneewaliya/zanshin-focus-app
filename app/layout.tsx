@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   description: "Minimalist, distraction-free productivity workspace combining Pomodoro Timer, Task Manager, Personal Journal, and Focus Mode.",
 };
 
+import { GlobalMusicPlayer } from "@/features/music-player/components/GlobalMusicPlayer";
+
 export default function RootLayout({
   children,
 }: {
@@ -49,9 +51,10 @@ export default function RootLayout({
               <ThemeToggle />
             </div>
           </header>
-          <main className="flex-1 container max-w-6xl mx-auto px-4 sm:px-6 py-8">
+          <main className="flex-1 container max-w-6xl mx-auto px-4 sm:px-6 py-8 pb-24">
             {children}
           </main>
+          <GlobalMusicPlayer />
         </ThemeProvider>
       </body>
     </html>
