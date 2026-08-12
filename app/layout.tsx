@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UserNav } from "@/components/user-nav";
 import { GlobalMusicPlayer } from "@/features/music-player/components/GlobalMusicPlayer";
 
 const inter = Inter({
@@ -41,13 +43,16 @@ export default function RootLayout({
         >
           <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/85 backdrop-blur-md">
             <div className="container max-w-6xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
-              <div className="flex items-center gap-2">
+              <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
                 <span className="h-2 w-2 rounded-full bg-primary" />
                 <span className="font-semibold text-lg tracking-tight font-heading">
                   Zanshin Focus
                 </span>
+              </Link>
+              <div className="flex items-center gap-3">
+                <UserNav />
+                <ThemeToggle />
               </div>
-              <ThemeToggle />
             </div>
           </header>
           <main className="flex-1 container max-w-6xl mx-auto px-4 sm:px-6 py-8 pb-24">
