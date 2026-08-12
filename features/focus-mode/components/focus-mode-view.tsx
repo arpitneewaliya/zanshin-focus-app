@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAmbientSound } from "@/features/focus-mode/hooks/use-ambient-sound";
+import { useMusicPlayerStore } from "@/stores/musicPlayerStore";
 import { FocusClockDisplay } from "@/features/focus-mode/components/focus-clock-display";
 import { AmbientControls } from "@/features/focus-mode/components/ambient-controls";
 import { FocusSettingsPanel } from "@/features/focus-mode/components/focus-settings-panel";
@@ -13,6 +14,15 @@ import { cn } from "@/lib/utils";
 
 export function FocusModeView() {
   const router = useRouter();
+
+  // Automatically pause global music player when entering Focus Mode
+  useEffect(() => {
+    const { isPlaying, setIsPlaying } = useMusicPlayerStore.getState();
+    if (isPlaying) {
+      setIsPlaying(false);
+    }
+  }, []);
+
   const {
     selectedSound,
     setSelectedSound,

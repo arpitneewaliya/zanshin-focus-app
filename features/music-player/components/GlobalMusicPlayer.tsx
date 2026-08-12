@@ -174,6 +174,18 @@ export function GlobalMusicPlayer() {
     };
   }, []);
 
+  // Stop global music playback when entering Focus Mode
+  useEffect(() => {
+    if (pathname && pathname.startsWith("/focus-mode")) {
+      if (howlRef.current && howlRef.current.playing()) {
+        howlRef.current.pause();
+      }
+      if (isPlaying) {
+        setIsPlaying(false);
+      }
+    }
+  }, [pathname, isPlaying, setIsPlaying]);
+
   // Exclude player when on Focus Mode route
   if (!isMounted || (pathname && pathname.startsWith("/focus-mode"))) {
     return null;
