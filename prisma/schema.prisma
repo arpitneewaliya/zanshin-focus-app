@@ -1,0 +1,182 @@
+// ─────────────────────────────────────────────────────────
+// Zanshin Focus — Prisma Schema (DRAFT for review)
+// ─────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────
+// User
+// id matches the Supabase Auth `auth.users.id` (uuid) —
+// we don't manage passwords/sessions here, Supabase Auth does that.
+// ─────────────────────────────────────────────────────────
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  tasks            Task[]
+  journalEntries   JournalEntry[]
+  habits           Habit[]
+  pomodoroSessions PomodoroSession[]
+  settings         UserSettings?
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────
+// Task Manager  (from stores/taskStore.ts)
+// ─────────────────────────────────────────────────────────
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  dueDate     DateTime?    @db.Date
+  priority    TaskPriority @default(medium)
+  completed   Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+
+  @@index([userId])
+  @@map("tasks")
+}
+
+// ─────────────────────────────────────────────────────────
+// Personal Journal  (from stores/journalStore.ts)
+// ─────────────────────────────────────────────────────────
+model JournalEntry {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@map("journal_entries")
+}
+
+// ─────────────────────────────────────────────────────────
+// Habit Tracker  (from stores/habitStore.ts + AGENTS.md notes)
+// frequency is a discriminated union in TS -> stored as Json here,
+// e.g. {"type":"daily"} | {"type":"weekdays","daysOfWeek":[1,3,5]}
+//      | {"type":"weekly_target","targetDaysPerWeek":5}
+// ─────────────────────────────────────────────────────────
+enum HabitStatus {
+  completed
+  missed
+}
+
+model Habit {
+  id            String    @id @default(uuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  color         String // e.g. "indigo" | "emerald" | "amber" — kept as String, not enum
+  frequency     Json // discriminated union, see comment above
+  createdDate   DateTime  @db.Date
+  archivedDate  DateTime? @db.Date // null = active habit
+
+  completionLogs HabitCompletionLog[]
+
+  @@index([userId])
+  @@map("habits")
+}
+
+model HabitCompletionLog {
+  id      String      @id @default(uuid())
+  habitId String
+  habit   Habit       @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date    DateTime    @db.Date
+  status  HabitStatus
+
+  // one log entry per habit per day
+  @@unique([habitId, date])
+  @@index([habitId])
+  @@map("habit_completion_logs")
+}
+
+// ─────────────────────────────────────────────────────────
+// Pomodoro Sessions  — NEW, not in current local state.
+// Your timerStore currently only tracks an in-memory
+// `completedSessions` counter with no persistence. This table
+// gives you real historical data for the Dashboard's stats
+// (AGENTS.md: "Dashboard - central hub + productivity stats").
+// ─────────────────────────────────────────────────────────
+enum PomodoroMode {
+  work
+  shortBreak
+  longBreak
+}
+
+model PomodoroSession {
+  id          String       @id @default(uuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mode        PomodoroMode
+  durationSec Int // planned duration of that session, in seconds
+  completedAt DateTime     @default(now())
+
+  @@index([userId])
+  @@map("pomodoro_sessions")
+}
+
+// ─────────────────────────────────────────────────────────
+// User Settings — one row per user, bundles preferences from
+// timerStore (TimerSettings), focusStore (FocusSettings), and
+// musicPlayerStore's persisted slice (volume/repeatMode/shuffle).
+// ─────────────────────────────────────────────────────────
+enum ClockStyle {
+  digital
+  minimal
+  analog
+  text
+}
+
+enum RepeatMode {
+  off
+  all
+  one
+}
+
+model UserSettings {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Timer settings (from TimerSettings)
+  workDuration       Int @default(25) // minutes
+  shortBreakDuration Int @default(5)
+  longBreakDuration  Int @default(15)
+  longBreakInterval  Int @default(4)
+
+  // Focus Mode settings (from FocusSettings)
+  showSeconds Boolean    @default(false)
+  showDate    Boolean    @default(true)
+  use24Hour   Boolean    @default(true)
+  clockStyle  ClockStyle @default(digital)
+
+  // Music player persisted slice (from musicPlayerStore partialize)
+  musicVolume     Float      @default(0.7)
+  musicRepeatMode RepeatMode @default(off)
+  musicShuffle    Boolean    @default(false)
+  lastTrackId     String?
+
+  @@map("user_settings")
+}
