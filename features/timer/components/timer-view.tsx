@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useTimerStore, TimerMode } from "@/stores/timerStore";
 import { playTimerCompletionSound, unlockAudioContext } from "@/lib/sound";
+import { getUserSettings, logPomodoroSession } from "@/app/actions/pomodoro";
 import { ModeSelector } from "./mode-selector";
 import { TimerDisplay } from "./timer-display";
 import { TimerControls } from "./timer-controls";
@@ -11,10 +12,37 @@ import { TimerNotificationModal } from "./timer-notification";
 import { Card } from "@/components/ui/card";
 
 export function TimerView() {
-  const { isRunning, tick, timeLeft, mode } = useTimerStore();
+  const {
+    isRunning,
+    tick,
+    timeLeft,
+    mode,
+    workDuration,
+    shortBreakDuration,
+    longBreakDuration,
+    hydrateSettings,
+  } = useTimerStore();
   const [showSettings, setShowSettings] = React.useState(false);
   const [completedModalMode, setCompletedModalMode] =
     React.useState<TimerMode | null>(null);
+
+  // Hydrate user settings from Supabase on mount
+  React.useEffect(() => {
+    let isMounted = true;
+    getUserSettings()
+      .then((result) => {
+        if (isMounted && result.success && result.data) {
+          hydrateSettings(result.data);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load timer settings:", err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hydrateSettings]);
 
   // Request browser notification permission if available
   React.useEffect(() => {
@@ -34,6 +62,18 @@ export function TimerView() {
         tick((finishedMode) => {
           playTimerCompletionSound();
           setCompletedModalMode(finishedMode);
+
+          // Calculate duration in seconds and log session to DB (fire-and-forget)
+          const sessionDurationSec =
+            finishedMode === "work"
+              ? workDuration * 60
+              : finishedMode === "shortBreak"
+              ? shortBreakDuration * 60
+              : longBreakDuration * 60;
+
+          logPomodoroSession(finishedMode, sessionDurationSec).catch((err) => {
+            console.error("Failed to log pomodoro session:", err);
+          });
 
           // Show browser notification if permission granted
           if (
@@ -62,7 +102,7 @@ export function TimerView() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isRunning, tick]);
+  }, [isRunning, tick, workDuration, shortBreakDuration, longBreakDuration]);
 
   // Dynamic Browser Tab Title Update
   React.useEffect(() => {

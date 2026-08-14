@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useTimerStore } from "@/stores/timerStore";
+import { useTimerStore, TimerSettings } from "@/stores/timerStore";
+import { updateTimerSettings } from "@/app/actions/pomodoro";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { X } from "lucide-react";
@@ -19,6 +20,48 @@ export function TimerSettingsPanel({ onClose }: TimerSettingsProps) {
     longBreakInterval,
     updateSettings,
   } = useTimerStore();
+
+  const debounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const pendingSettingsRef = React.useRef<Partial<TimerSettings>>({});
+
+  const handleSettingChange = (patch: Partial<TimerSettings>) => {
+    // 1. Update local store immediately for instant UI response
+    updateSettings(patch);
+
+    // 2. Accumulate pending updates
+    pendingSettingsRef.current = {
+      ...pendingSettingsRef.current,
+      ...patch,
+    };
+
+    // 3. Debounce server action call
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(async () => {
+      const toSave = { ...pendingSettingsRef.current };
+      pendingSettingsRef.current = {};
+      try {
+        await updateTimerSettings(toSave);
+      } catch (err) {
+        console.error("Failed to persist timer settings:", err);
+      }
+    }, 500);
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        if (Object.keys(pendingSettingsRef.current).length > 0) {
+          updateTimerSettings(pendingSettingsRef.current).catch((err) => {
+            console.error("Failed to persist timer settings on close:", err);
+          });
+        }
+      }
+    };
+  }, []);
 
   return (
     <Card className="w-full max-w-md mx-auto border-border/60 shadow-lg">
@@ -48,7 +91,7 @@ export function TimerSettingsPanel({ onClose }: TimerSettingsProps) {
             min={1}
             max={60}
             step={1}
-            onValueChange={(val) => updateSettings({ workDuration: val })}
+            onValueChange={(val) => handleSettingChange({ workDuration: val })}
           />
         </div>
 
@@ -63,7 +106,7 @@ export function TimerSettingsPanel({ onClose }: TimerSettingsProps) {
             min={1}
             max={30}
             step={1}
-            onValueChange={(val) => updateSettings({ shortBreakDuration: val })}
+            onValueChange={(val) => handleSettingChange({ shortBreakDuration: val })}
           />
         </div>
 
@@ -78,7 +121,7 @@ export function TimerSettingsPanel({ onClose }: TimerSettingsProps) {
             min={1}
             max={45}
             step={1}
-            onValueChange={(val) => updateSettings({ longBreakDuration: val })}
+            onValueChange={(val) => handleSettingChange({ longBreakDuration: val })}
           />
         </div>
 
@@ -93,10 +136,11 @@ export function TimerSettingsPanel({ onClose }: TimerSettingsProps) {
             min={1}
             max={10}
             step={1}
-            onValueChange={(val) => updateSettings({ longBreakInterval: val })}
+            onValueChange={(val) => handleSettingChange({ longBreakInterval: val })}
           />
         </div>
       </CardContent>
     </Card>
   );
 }
+

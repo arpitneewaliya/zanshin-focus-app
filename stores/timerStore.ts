@@ -23,6 +23,7 @@ interface TimerState extends TimerSettings {
   skip: () => void;
   setMode: (mode: TimerMode) => void;
   updateSettings: (settings: Partial<TimerSettings>) => void;
+  hydrateSettings: (settings: Partial<TimerSettings>) => void;
 }
 
 const DEFAULT_SETTINGS: TimerSettings = {
@@ -147,6 +148,22 @@ export const useTimerStore = create<TimerState>((set, get) => ({
         !currentState.isRunning && isCurrentModeAffected
           ? getDurationForMode(currentState.mode, updatedSettings)
           : currentState.timeLeft,
+    });
+  },
+
+  hydrateSettings: (hydratedSettings: Partial<TimerSettings>) => {
+    const currentState = get();
+    const updatedSettings = {
+      ...currentState,
+      ...hydratedSettings,
+    };
+
+    // If timer is not running, adjust timeLeft to match the new duration
+    set({
+      ...hydratedSettings,
+      timeLeft: !currentState.isRunning
+        ? getDurationForMode(currentState.mode, updatedSettings)
+        : currentState.timeLeft,
     });
   },
 }));
