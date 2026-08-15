@@ -10,13 +10,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 
 interface TaskDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   taskTitle?: string;
+  isDeleting?: boolean;
 }
 
 export function TaskDeleteDialog({
@@ -24,6 +25,7 @@ export function TaskDeleteDialog({
   onOpenChange,
   onConfirm,
   taskTitle,
+  isDeleting = false,
 }: TaskDeleteDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -44,15 +46,23 @@ export function TaskDeleteDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
-            onClick={() => {
+            disabled={isDeleting}
+            onClick={(e) => {
+              e.preventDefault();
               onConfirm();
-              onOpenChange(false);
             }}
           >
-            Delete
+            {isDeleting ? (
+              <>
+                <Loader2 className="size-4 animate-spin mr-1.5" />
+                Deleting...
+              </>
+            ) : (
+              "Delete"
+            )}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

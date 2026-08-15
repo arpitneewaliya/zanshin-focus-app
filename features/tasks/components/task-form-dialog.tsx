@@ -22,7 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Edit2, Calendar, AlertCircle } from "lucide-react";
+import { createTask as createTaskAction, updateTask as updateTaskAction } from "@/app/actions/tasks";
+import { Plus, Edit2, Calendar, AlertCircle, Loader2 } from "lucide-react";
 
 interface TaskFormDialogProps {
   open: boolean;
@@ -49,8 +50,9 @@ function TaskFormContent({
     taskToEdit?.priority ?? "medium"
   );
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!title.trim()) {
@@ -58,23 +60,49 @@ function TaskFormContent({
       return;
     }
 
-    if (isEditing && taskToEdit) {
-      editTask(taskToEdit.id, {
-        title,
-        description,
-        dueDate,
-        priority,
-      });
-    } else {
-      addTask({
-        title,
-        description,
-        dueDate,
-        priority,
-      });
-    }
+    setIsSubmitting(true);
+    setError("");
 
-    onClose();
+    try {
+      if (isEditing && taskToEdit) {
+        const result = await updateTaskAction(taskToEdit.id, {
+          title,
+          description: description || undefined,
+          dueDate: dueDate || undefined,
+          priority,
+        });
+
+        if (!result.success || !result.data) {
+          setError(result.error || "Failed to update task");
+          setIsSubmitting(false);
+          return;
+        }
+
+        editTask(taskToEdit.id, result.data);
+      } else {
+        const result = await createTaskAction({
+          title,
+          description: description || undefined,
+          dueDate: dueDate || undefined,
+          priority,
+        });
+
+        if (!result.success || !result.data) {
+          setError(result.error || "Failed to create task");
+          setIsSubmitting(false);
+          return;
+        }
+
+        addTask(result.data);
+      }
+
+      onClose();
+    } catch (err) {
+      console.error("Error submitting task form:", err);
+      setError("An unexpected network error occurred.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -114,6 +142,7 @@ function TaskFormContent({
               setTitle(e.target.value);
               if (error) setError("");
             }}
+            disabled={isSubmitting}
             autoFocus
             className={error ? "border-destructive focus-visible:ring-destructive/20" : ""}
           />
@@ -135,6 +164,7 @@ function TaskFormContent({
             placeholder="Add key subtasks, requirements, or links..."
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            disabled={isSubmitting}
             rows={3}
             className="resize-none"
           />
@@ -150,6 +180,7 @@ function TaskFormContent({
             <Select
               value={priority}
               onValueChange={(val) => setPriority(val as TaskPriority)}
+              disabled={isSubmitting}
             >
               <SelectTrigger id="task-priority" className="w-full">
                 <SelectValue placeholder="Select priority" />
@@ -188,6 +219,7 @@ function TaskFormContent({
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
+                disabled={isSubmitting}
                 className="pr-8"
               />
               <Calendar className="size-4 absolute right-2.5 top-2.5 text-muted-foreground pointer-events-none" />
@@ -200,11 +232,21 @@ function TaskFormContent({
             type="button"
             variant="outline"
             onClick={onClose}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
-          <Button type="submit">
-            {isEditing ? "Save Changes" : "Create Task"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="size-4 animate-spin mr-1.5" />
+                Saving...
+              </>
+            ) : isEditing ? (
+              "Save Changes"
+            ) : (
+              "Create Task"
+            )}
           </Button>
         </DialogFooter>
       </form>

@@ -3,13 +3,18 @@ import { ArrowLeft } from "lucide-react";
 import { TaskManagerView } from "@/features/tasks/components/task-manager-view";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getTasks } from "@/app/actions/tasks";
 
 export const metadata = {
   title: "Task Manager - Zanshin Focus",
   description: "Organize focus tasks, set priorities, track due dates, and manage daily productivity goals.",
 };
 
-export default function TasksPage() {
+export default async function TasksPage() {
+  const result = await getTasks();
+  const initialTasks = result.success && result.data ? result.data : [];
+  const initialError = !result.success && !result.guest ? result.error : undefined;
+
   return (
     <div className="space-y-6">
       {/* Top Header & Breadcrumb */}
@@ -31,7 +36,7 @@ export default function TasksPage() {
       </div>
 
       {/* Main Task View */}
-      <TaskManagerView />
+      <TaskManagerView initialTasks={initialTasks} initialError={initialError} />
     </div>
   );
 }

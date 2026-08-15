@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Task } from "@/features/tasks/types";
 import { useTaskStore } from "@/stores/taskStore";
@@ -11,6 +11,11 @@ import { TaskDeleteDialog } from "@/features/tasks/components/task-delete-dialog
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  deleteTask as deleteTaskAction,
+  toggleTaskComplete as toggleTaskCompleteAction,
+  clearCompletedTasks as clearCompletedTasksAction,
+} from "@/app/actions/tasks";
+import {
   ListTodo,
   CheckCircle2,
   Clock,
@@ -18,20 +23,38 @@ import {
   FilterX,
   Sparkles,
   Trash2,
+  AlertCircle,
+  X,
 } from "lucide-react";
 
-export function TaskManagerView() {
+interface TaskManagerViewProps {
+  initialTasks?: Task[];
+  initialError?: string;
+}
+
+export function TaskManagerView({ initialTasks, initialError }: TaskManagerViewProps) {
   const tasks = useTaskStore((state) => state.tasks);
   const filterStatus = useTaskStore((state) => state.filterStatus);
   const filterPriority = useTaskStore((state) => state.filterPriority);
   const sortBy = useTaskStore((state) => state.sortBy);
   const sortOrder = useTaskStore((state) => state.sortOrder);
 
-  const toggleTaskComplete = useTaskStore((state) => state.toggleTaskComplete);
-  const deleteTask = useTaskStore((state) => state.deleteTask);
+  const setTasks = useTaskStore((state) => state.setTasks);
+  const toggleTaskCompleteStore = useTaskStore((state) => state.toggleTaskComplete);
+  const deleteTaskStore = useTaskStore((state) => state.deleteTask);
   const setFilterStatus = useTaskStore((state) => state.setFilterStatus);
   const setFilterPriority = useTaskStore((state) => state.setFilterPriority);
-  const clearCompletedTasks = useTaskStore((state) => state.clearCompletedTasks);
+  const clearCompletedTasksStore = useTaskStore((state) => state.clearCompletedTasks);
+
+  // Sync initial tasks into the store on mount / change
+  useEffect(() => {
+    if (initialTasks) {
+      setTasks(initialTasks);
+    }
+  }, [initialTasks, setTasks]);
+
+  // Error Banner State
+  const [errorMessage, setErrorMessage] = useState<string | null>(initialError || null);
 
   // Dialog State
   const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -39,6 +62,7 @@ export function TaskManagerView() {
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Calculate filtered and sorted task list
   const filteredTasks = useMemo(() => {
@@ -97,10 +121,67 @@ export function TaskManagerView() {
     setDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = () => {
-    if (taskToDelete) {
-      deleteTask(taskToDelete.id);
+  const handleToggleComplete = async (id: string) => {
+    // Optimistic toggle
+    toggleTaskCompleteStore(id);
+    setErrorMessage(null);
+
+    try {
+      const result = await toggleTaskCompleteAction(id);
+      if (!result.success) {
+        // Roll back on failure
+        toggleTaskCompleteStore(id);
+        setErrorMessage(result.error || "Failed to update task status");
+      }
+    } catch (err) {
+      console.error("Error toggling task completion:", err);
+      toggleTaskCompleteStore(id);
+      setErrorMessage("Network error while updating task status");
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!taskToDelete) return;
+
+    const removedTask = taskToDelete;
+    // Optimistic delete
+    deleteTaskStore(removedTask.id);
+    setErrorMessage(null);
+    setIsDeleting(true);
+
+    try {
+      const result = await deleteTaskAction(removedTask.id);
+      if (!result.success) {
+        // Roll back
+        setTasks([...tasks]);
+        setErrorMessage(result.error || "Failed to delete task");
+      }
+    } catch (err) {
+      console.error("Error deleting task:", err);
+      setTasks([...tasks]);
+      setErrorMessage("Network error while deleting task");
+    } finally {
+      setIsDeleting(false);
       setTaskToDelete(null);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  const handleClearCompleted = async () => {
+    const previousTasks = [...tasks];
+    clearCompletedTasksStore();
+    setErrorMessage(null);
+
+    try {
+      const result = await clearCompletedTasksAction();
+      if (!result.success) {
+        setTasks(previousTasks);
+        setErrorMessage(result.error || "Failed to clear completed tasks");
+      }
+    } catch (err) {
+      console.error("Error clearing completed tasks:", err);
+      setTasks(previousTasks);
+      setErrorMessage("Network error while clearing completed tasks");
     }
   };
 
@@ -111,6 +192,25 @@ export function TaskManagerView() {
 
   return (
     <div className="space-y-6">
+      {/* Error Alert Banner */}
+      {errorMessage && (
+        <div className="flex items-center justify-between p-3.5 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-sm">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="size-4 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => setErrorMessage(null)}
+            className="text-destructive hover:bg-destructive/10"
+            aria-label="Dismiss error"
+          >
+            <X className="size-3.5" />
+          </Button>
+        </div>
+      )}
+
       {/* Top Stats Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="bg-card/50 backdrop-blur-xs border-border/50 shadow-xs">
@@ -176,7 +276,7 @@ export function TaskManagerView() {
               <TaskItem
                 key={task.id}
                 task={task}
-                onToggleComplete={toggleTaskComplete}
+                onToggleComplete={handleToggleComplete}
                 onEdit={handleOpenEditModal}
                 onDelete={handleOpenDeleteModal}
               />
@@ -234,7 +334,7 @@ export function TaskManagerView() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={clearCompletedTasks}
+            onClick={handleClearCompleted}
             className="text-xs text-muted-foreground hover:text-destructive gap-1.5"
           >
             <Trash2 className="size-3.5" />
@@ -256,6 +356,7 @@ export function TaskManagerView() {
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleConfirmDelete}
         taskTitle={taskToDelete?.title}
+        isDeleting={isDeleting}
       />
     </div>
   );

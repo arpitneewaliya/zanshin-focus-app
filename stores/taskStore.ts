@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import {
   Task,
   TaskPriority,
@@ -17,12 +16,8 @@ interface TaskState {
   sortOrder: SortOrder;
 
   // Actions
-  addTask: (data: {
-    title: string;
-    description?: string;
-    dueDate?: string;
-    priority?: TaskPriority;
-  }) => void;
+  setTasks: (tasks: Task[]) => void;
+  addTask: (task: Task) => void;
   editTask: (
     id: string,
     updates: Partial<Pick<Task, "title" | "description" | "dueDate" | "priority">>
@@ -36,104 +31,62 @@ interface TaskState {
   clearCompletedTasks: () => void;
 }
 
-export const useTaskStore = create<TaskState>()(
-  persist(
-    (set) => ({
-      tasks: [
-        {
-          id: "demo-task-1",
-          title: "Complete Pomodoro Focus Session",
-          description: "Run a 25-minute deep work session with distraction blocking.",
-          dueDate: new Date().toISOString().split("T")[0],
-          priority: "high",
-          completed: false,
-          createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
-        },
-        {
-          id: "demo-task-2",
-          title: "Organize Weekly Project Notes",
-          description: "Review personal journal entries and summarize key takeaways.",
-          dueDate: new Date(Date.now() + 86400000).toISOString().split("T")[0],
-          priority: "medium",
-          completed: false,
-          createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-        },
-        {
-          id: "demo-task-3",
-          title: "Refactor Theme Variables",
-          description: "Ensure color palette consistency across all features.",
-          dueDate: undefined,
-          priority: "low",
-          completed: true,
-          createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-        },
-      ],
-      filterStatus: "all",
-      filterPriority: "all",
-      sortBy: "createdAt",
-      sortOrder: "desc",
+export const useTaskStore = create<TaskState>((set) => ({
+  tasks: [],
+  filterStatus: "all",
+  filterPriority: "all",
+  sortBy: "createdAt",
+  sortOrder: "desc",
 
-      addTask: ({ title, description, dueDate, priority = "medium" }) => {
-        const newTask: Task = {
-          id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `task-${Date.now()}`,
-          title: title.trim(),
-          description: description?.trim() || undefined,
-          dueDate: dueDate || undefined,
-          priority,
-          completed: false,
-          createdAt: new Date().toISOString(),
+  setTasks: (tasks) => set({ tasks }),
+
+  addTask: (newTask) => {
+    set((state) => ({
+      tasks: [newTask, ...state.tasks.filter((t) => t.id !== newTask.id)],
+    }));
+  },
+
+  editTask: (id, updates) => {
+    set((state) => ({
+      tasks: state.tasks.map((task) => {
+        if (task.id !== id) return task;
+        return {
+          ...task,
+          title: updates.title !== undefined ? updates.title.trim() : task.title,
+          description:
+            updates.description !== undefined
+              ? updates.description.trim() || undefined
+              : task.description,
+          dueDate:
+            updates.dueDate !== undefined ? updates.dueDate || undefined : task.dueDate,
+          priority: updates.priority ?? task.priority,
         };
+      }),
+    }));
+  },
 
-        set((state) => ({
-          tasks: [newTask, ...state.tasks],
-        }));
-      },
+  deleteTask: (id) => {
+    set((state) => ({
+      tasks: state.tasks.filter((task) => task.id !== id),
+    }));
+  },
 
-      editTask: (id, updates) => {
-        set((state) => ({
-          tasks: state.tasks.map((task) => {
-            if (task.id !== id) return task;
-            return {
-              ...task,
-              title: updates.title !== undefined ? updates.title.trim() : task.title,
-              description:
-                updates.description !== undefined
-                  ? updates.description.trim() || undefined
-                  : task.description,
-              dueDate: updates.dueDate !== undefined ? updates.dueDate || undefined : task.dueDate,
-              priority: updates.priority ?? task.priority,
-            };
-          }),
-        }));
-      },
+  toggleTaskComplete: (id) => {
+    set((state) => ({
+      tasks: state.tasks.map((task) =>
+        task.id === id ? { ...task, completed: !task.completed } : task
+      ),
+    }));
+  },
 
-      deleteTask: (id) => {
-        set((state) => ({
-          tasks: state.tasks.filter((task) => task.id !== id),
-        }));
-      },
+  setFilterStatus: (status) => set({ filterStatus: status }),
+  setFilterPriority: (priority) => set({ filterPriority: priority }),
+  setSortBy: (sortBy) => set({ sortBy }),
+  setSortOrder: (sortOrder) => set({ sortOrder }),
 
-      toggleTaskComplete: (id) => {
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === id ? { ...task, completed: !task.completed } : task
-          ),
-        }));
-      },
-
-      setFilterStatus: (status) => set({ filterStatus: status }),
-      setFilterPriority: (priority) => set({ filterPriority: priority }),
-      setSortBy: (sortBy) => set({ sortBy }),
-      setSortOrder: (sortOrder) => set({ sortOrder }),
-
-      clearCompletedTasks: () => {
-        set((state) => ({
-          tasks: state.tasks.filter((task) => !task.completed),
-        }));
-      },
-    }),
-    {
-      name: "zanshin-tasks-storage",
-    }
-  )
-);
+  clearCompletedTasks: () => {
+    set((state) => ({
+      tasks: state.tasks.filter((task) => !task.completed),
+    }));
+  },
+}));
