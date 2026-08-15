@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { HabitTrackerView } from "@/features/habit-tracker/components/habit-tracker-view";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getHabitsWithLogs } from "@/app/actions/habits";
 
 export const metadata = {
   title: "Habit Tracker - Zanshin Focus",
@@ -10,7 +11,12 @@ export const metadata = {
     "Track recurring habits with calendar heatmaps and consecutive scheduled occurrence streak calculation.",
 };
 
-export default function HabitTrackerPage() {
+export default async function HabitTrackerPage() {
+  const result = await getHabitsWithLogs();
+  const initialHabits = result.success && result.data ? result.data.habits : [];
+  const initialLogs = result.success && result.data ? result.data.completionLogs : [];
+  const initialError = !result.success && !result.guest ? result.error : undefined;
+
   return (
     <div className="space-y-6">
       {/* Top Header & Breadcrumb */}
@@ -32,7 +38,11 @@ export default function HabitTrackerPage() {
       </div>
 
       {/* Main View */}
-      <HabitTrackerView />
+      <HabitTrackerView
+        initialHabits={initialHabits}
+        initialLogs={initialLogs}
+        initialError={initialError}
+      />
     </div>
   );
 }

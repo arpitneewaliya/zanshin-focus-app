@@ -20,7 +20,7 @@ import {
 } from "../types";
 import { getHabitColorClasses } from "../utils";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 
 interface HabitFormDialogProps {
   open: boolean;
@@ -30,7 +30,7 @@ interface HabitFormDialogProps {
     description?: string;
     color: HabitColor;
     frequency: HabitFrequency;
-  }) => void;
+  }) => Promise<boolean | void> | void;
   initialHabit?: Habit | null;
 }
 
@@ -81,6 +81,7 @@ function FormFields({
     initialHabit?.frequency.targetDaysPerWeek || 3
   );
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const toggleDay = (day: number) => {
     setSelectedDays((prev) =>
@@ -88,7 +89,7 @@ function FormFields({
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
       setError("Habit name is required.");
@@ -112,14 +113,26 @@ function FormFields({
       };
     }
 
-    onSubmit({
-      name: name.trim(),
-      description: description.trim() || undefined,
-      color,
-      frequency,
-    });
+    setIsSubmitting(true);
+    setError("");
 
-    onClose();
+    try {
+      const res = await onSubmit({
+        name: name.trim(),
+        description: description.trim() || undefined,
+        color,
+        frequency,
+      });
+
+      if (res !== false) {
+        onClose();
+      }
+    } catch (err) {
+      console.error("Error submitting habit:", err);
+      setError("Failed to save habit. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -137,6 +150,7 @@ function FormFields({
             setName(e.target.value);
             if (error) setError("");
           }}
+          disabled={isSubmitting}
           autoFocus
         />
         {error && <p className="text-xs text-destructive">{error}</p>}
@@ -152,6 +166,7 @@ function FormFields({
           placeholder="Why is this habit important? Add notes or context..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          disabled={isSubmitting}
           rows={2}
         />
       </div>
@@ -168,6 +183,7 @@ function FormFields({
                 key={c}
                 type="button"
                 onClick={() => setColor(c)}
+                disabled={isSubmitting}
                 className={cn(
                   "size-8 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer",
                   config.dot,
@@ -193,6 +209,7 @@ function FormFields({
             variant={frequencyType === "daily" ? "default" : "outline"}
             size="sm"
             onClick={() => setFrequencyType("daily")}
+            disabled={isSubmitting}
             className="w-full text-xs font-medium"
           >
             Every Day
@@ -202,6 +219,7 @@ function FormFields({
             variant={frequencyType === "weekdays" ? "default" : "outline"}
             size="sm"
             onClick={() => setFrequencyType("weekdays")}
+            disabled={isSubmitting}
             className="w-full text-xs font-medium"
           >
             Weekdays
@@ -213,6 +231,7 @@ function FormFields({
             }
             size="sm"
             onClick={() => setFrequencyType("weekly_target")}
+            disabled={isSubmitting}
             className="w-full text-xs font-medium"
           >
             Times / Week
@@ -233,6 +252,7 @@ function FormFields({
                     key={day}
                     type="button"
                     onClick={() => toggleDay(day)}
+                    disabled={isSubmitting}
                     className={cn(
                       "size-8 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer border",
                       isSelected
@@ -260,6 +280,7 @@ function FormFields({
                   key={num}
                   type="button"
                   onClick={() => setTargetPerWeek(num)}
+                  disabled={isSubmitting}
                   className={cn(
                     "flex-1 py-1.5 rounded-md text-xs font-medium transition-all duration-150 border cursor-pointer",
                     targetPerWeek === num
@@ -276,11 +297,25 @@ function FormFields({
       </div>
 
       <DialogFooter className="pt-2">
-        <Button type="button" variant="outline" onClick={onClose}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+          disabled={isSubmitting}
+        >
           Cancel
         </Button>
-        <Button type="submit">
-          {initialHabit ? "Save Changes" : "Create Habit"}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="size-4 animate-spin mr-1.5" />
+              Saving...
+            </>
+          ) : initialHabit ? (
+            "Save Changes"
+          ) : (
+            "Create Habit"
+          )}
         </Button>
       </DialogFooter>
     </form>
