@@ -1,13 +1,7 @@
 import type { NextConfig } from "next";
 
-const isProd = process.env.NODE_ENV === "production";
-
 const nextConfig: NextConfig = {
-  basePath: isProd ? "/zanshin-focus-app" : "",
-  trailingSlash: true,
-  images: {
-    unoptimized: true,
-  },
+  trailingSlash: true, // fine to keep if you like this, or drop it — no longer required
 };
 
 export default nextConfig;
