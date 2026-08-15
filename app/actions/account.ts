@@ -8,6 +8,7 @@ export type UserProfile = {
   id: string;
   email: string;
   name: string | null;
+  avatarUrl: string | null;
 };
 
 export type ActionResult<T = unknown> = {
@@ -42,7 +43,14 @@ export async function getUserProfile(): Promise<ActionResult<UserProfile | null>
         data: {
           id: user.id,
           email: user.email,
-          name: (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || null,
+          name:
+            (user.user_metadata?.full_name as string) ||
+            (user.user_metadata?.name as string) ||
+            null,
+          avatarUrl:
+            (user.user_metadata?.avatar_url as string) ||
+            (user.user_metadata?.picture as string) ||
+            null,
         },
       });
     }
@@ -57,6 +65,7 @@ export async function getUserProfile(): Promise<ActionResult<UserProfile | null>
         id: dbUser.id,
         email: dbUser.email,
         name: dbUser.name,
+        avatarUrl: dbUser.avatarUrl,
       },
     };
   } catch (error) {
@@ -109,6 +118,7 @@ export async function updateUserName(
     });
 
     revalidatePath("/", "layout");
+    revalidatePath("/settings");
 
     return {
       success: true,
@@ -117,5 +127,54 @@ export async function updateUserName(
   } catch (error) {
     console.error("Error updating user name:", error);
     return { success: false, error: "Failed to update display name. Please try again." };
+  }
+}
+
+/**
+ * Updates or removes the current authenticated user's profile avatar URL.
+ */
+export async function updateUserAvatar(
+  avatarUrl: string | null
+): Promise<ActionResult<{ avatarUrl: string | null }>> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: "Unauthorized. Please log in again." };
+    }
+
+    // Update in Prisma
+    const updatedUser = await prisma.user.upsert({
+      where: { id: user.id },
+      update: { avatarUrl },
+      create: {
+        id: user.id,
+        email: user.email || "",
+        avatarUrl,
+      },
+    });
+
+    // Update Supabase Auth metadata for consistency
+    await supabase.auth.updateUser({
+      data: {
+        avatar_url: avatarUrl,
+        picture: avatarUrl,
+      },
+    });
+
+    revalidatePath("/", "layout");
+    revalidatePath("/settings");
+
+    return {
+      success: true,
+      data: { avatarUrl: updatedUser.avatarUrl },
+    };
+  } catch (error) {
+    console.error("Error updating user avatar:", error);
+    return { success: false, error: "Failed to update avatar photo." };
   }
 }

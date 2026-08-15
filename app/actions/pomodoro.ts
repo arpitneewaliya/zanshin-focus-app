@@ -2,13 +2,24 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
-import { PomodoroMode } from "@prisma/client";
+import { ClockStyle, PomodoroMode } from "@prisma/client";
 
 export type TimerSettingsData = {
   workDuration: number;
   shortBreakDuration: number;
   longBreakDuration: number;
   longBreakInterval: number;
+};
+
+export type UserSettingsData = {
+  workDuration: number;
+  shortBreakDuration: number;
+  longBreakDuration: number;
+  longBreakInterval: number;
+  showSeconds: boolean;
+  showDate: boolean;
+  use24Hour: boolean;
+  clockStyle: "digital" | "minimal" | "analog" | "text";
 };
 
 export type ActionResult<T = unknown> = {
@@ -19,10 +30,10 @@ export type ActionResult<T = unknown> = {
 };
 
 /**
- * Retrieves the current authenticated user's timer settings.
+ * Retrieves the current authenticated user's settings.
  * Returns null if the user is unauthenticated or has no custom settings yet.
  */
-export async function getUserSettings(): Promise<ActionResult<TimerSettingsData | null>> {
+export async function getUserSettings(): Promise<ActionResult<UserSettingsData | null>> {
   try {
     const supabase = await createClient();
     const {
@@ -41,6 +52,10 @@ export async function getUserSettings(): Promise<ActionResult<TimerSettingsData 
         shortBreakDuration: true,
         longBreakDuration: true,
         longBreakInterval: true,
+        showSeconds: true,
+        showDate: true,
+        use24Hour: true,
+        clockStyle: true,
       },
     });
 
@@ -55,20 +70,24 @@ export async function getUserSettings(): Promise<ActionResult<TimerSettingsData 
         shortBreakDuration: settings.shortBreakDuration,
         longBreakDuration: settings.longBreakDuration,
         longBreakInterval: settings.longBreakInterval,
+        showSeconds: settings.showSeconds,
+        showDate: settings.showDate,
+        use24Hour: settings.use24Hour,
+        clockStyle: settings.clockStyle as UserSettingsData["clockStyle"],
       },
     };
   } catch (error) {
-    console.error("Error fetching user timer settings:", error);
-    return { success: false, error: "Failed to fetch timer settings" };
+    console.error("Error fetching user settings:", error);
+    return { success: false, error: "Failed to fetch settings" };
   }
 }
 
 /**
- * Updates the current authenticated user's timer settings in the database.
+ * Updates the current authenticated user's general preferences in the database.
  */
-export async function updateTimerSettings(
-  settings: Partial<TimerSettingsData>
-): Promise<ActionResult<TimerSettingsData>> {
+export async function updateUserSettings(
+  settings: Partial<UserSettingsData>
+): Promise<ActionResult<UserSettingsData>> {
   try {
     const supabase = await createClient();
     const {
@@ -81,7 +100,17 @@ export async function updateTimerSettings(
     }
 
     // Input validation & clamping
-    const updates: Partial<TimerSettingsData> = {};
+    const updates: Partial<{
+      workDuration: number;
+      shortBreakDuration: number;
+      longBreakDuration: number;
+      longBreakInterval: number;
+      showSeconds: boolean;
+      showDate: boolean;
+      use24Hour: boolean;
+      clockStyle: ClockStyle;
+    }> = {};
+
     if (typeof settings.workDuration === "number") {
       updates.workDuration = Math.min(Math.max(Math.round(settings.workDuration), 1), 60);
     }
@@ -94,6 +123,21 @@ export async function updateTimerSettings(
     if (typeof settings.longBreakInterval === "number") {
       updates.longBreakInterval = Math.min(Math.max(Math.round(settings.longBreakInterval), 1), 10);
     }
+    if (typeof settings.showSeconds === "boolean") {
+      updates.showSeconds = settings.showSeconds;
+    }
+    if (typeof settings.showDate === "boolean") {
+      updates.showDate = settings.showDate;
+    }
+    if (typeof settings.use24Hour === "boolean") {
+      updates.use24Hour = settings.use24Hour;
+    }
+    if (
+      settings.clockStyle &&
+      ["digital", "minimal", "analog", "text"].includes(settings.clockStyle)
+    ) {
+      updates.clockStyle = settings.clockStyle as ClockStyle;
+    }
 
     // Ensure User row exists
     await prisma.user.upsert({
@@ -102,7 +146,10 @@ export async function updateTimerSettings(
       create: {
         id: user.id,
         email: user.email || "",
-        name: (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || null,
+        name:
+          (user.user_metadata?.full_name as string) ||
+          (user.user_metadata?.name as string) ||
+          null,
       },
     });
 
@@ -115,23 +162,61 @@ export async function updateTimerSettings(
         shortBreakDuration: updates.shortBreakDuration ?? 5,
         longBreakDuration: updates.longBreakDuration ?? 15,
         longBreakInterval: updates.longBreakInterval ?? 4,
+        showSeconds: updates.showSeconds ?? false,
+        showDate: updates.showDate ?? true,
+        use24Hour: updates.use24Hour ?? true,
+        clockStyle: updates.clockStyle ?? "digital",
       },
       select: {
         workDuration: true,
         shortBreakDuration: true,
         longBreakDuration: true,
         longBreakInterval: true,
+        showSeconds: true,
+        showDate: true,
+        use24Hour: true,
+        clockStyle: true,
       },
     });
 
     return {
       success: true,
-      data: saved,
+      data: {
+        workDuration: saved.workDuration,
+        shortBreakDuration: saved.shortBreakDuration,
+        longBreakDuration: saved.longBreakDuration,
+        longBreakInterval: saved.longBreakInterval,
+        showSeconds: saved.showSeconds,
+        showDate: saved.showDate,
+        use24Hour: saved.use24Hour,
+        clockStyle: saved.clockStyle as UserSettingsData["clockStyle"],
+      },
     };
   } catch (error) {
-    console.error("Error updating timer settings:", error);
-    return { success: false, error: "Failed to save timer settings" };
+    console.error("Error updating user settings:", error);
+    return { success: false, error: "Failed to save settings" };
   }
+}
+
+/**
+ * Backwards-compatible alias for TimerSettings
+ */
+export async function updateTimerSettings(
+  settings: Partial<TimerSettingsData>
+): Promise<ActionResult<TimerSettingsData>> {
+  const res = await updateUserSettings(settings);
+  if (!res.success || !res.data) {
+    return { success: false, error: res.error };
+  }
+  return {
+    success: true,
+    data: {
+      workDuration: res.data.workDuration,
+      shortBreakDuration: res.data.shortBreakDuration,
+      longBreakDuration: res.data.longBreakDuration,
+      longBreakInterval: res.data.longBreakInterval,
+    },
+  };
 }
 
 /**
@@ -167,7 +252,10 @@ export async function logPomodoroSession(
       create: {
         id: user.id,
         email: user.email || "",
-        name: (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || null,
+        name:
+          (user.user_metadata?.full_name as string) ||
+          (user.user_metadata?.name as string) ||
+          null,
       },
     });
 
