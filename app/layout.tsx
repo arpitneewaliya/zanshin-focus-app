@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserNav } from "@/components/user-nav";
 import { GlobalMusicPlayer } from "@/features/music-player/components/GlobalMusicPlayer";
+import { Analytics } from '@vercel/analytics/next';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -60,6 +61,7 @@ export default function RootLayout({
           </main>
           <GlobalMusicPlayer />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
