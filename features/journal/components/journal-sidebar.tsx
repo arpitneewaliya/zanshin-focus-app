@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useJournalStore } from "@/stores/journalStore";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, BookOpen, Calendar } from "lucide-react";
+import { createJournalEntry as createJournalEntryAction } from "@/app/actions/journal";
+import { Plus, Search, BookOpen, Calendar, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface JournalSidebarProps {
@@ -37,9 +38,11 @@ export function JournalSidebar({ onNewEntryCreated, className }: JournalSidebarP
   const activeEntryId = useJournalStore((state) => state.activeEntryId);
   const searchQuery = useJournalStore((state) => state.searchQuery);
 
-  const createEntry = useJournalStore((state) => state.createEntry);
+  const addEntry = useJournalStore((state) => state.addEntry);
   const setActiveEntry = useJournalStore((state) => state.setActiveEntry);
   const setSearchQuery = useJournalStore((state) => state.setSearchQuery);
+
+  const [isCreating, setIsCreating] = useState(false);
 
   const filteredEntries = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -57,9 +60,19 @@ export function JournalSidebar({ onNewEntryCreated, className }: JournalSidebarP
       );
   }, [entries, searchQuery]);
 
-  const handleCreate = () => {
-    createEntry("", "");
-    if (onNewEntryCreated) onNewEntryCreated();
+  const handleCreate = async () => {
+    setIsCreating(true);
+    try {
+      const result = await createJournalEntryAction("", "");
+      if (result.success && result.data) {
+        addEntry(result.data);
+        if (onNewEntryCreated) onNewEntryCreated();
+      }
+    } catch (err) {
+      console.error("Error creating entry:", err);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -81,9 +94,22 @@ export function JournalSidebar({ onNewEntryCreated, className }: JournalSidebarP
           </span>
         </div>
 
-        <Button onClick={handleCreate} className="w-full gap-1.5 size-sm h-9">
-          <Plus className="size-4" />
-          <span>New Entry</span>
+        <Button
+          onClick={handleCreate}
+          disabled={isCreating}
+          className="w-full gap-1.5 size-sm h-9"
+        >
+          {isCreating ? (
+            <>
+              <Loader2 className="size-3.5 animate-spin" />
+              <span>Creating...</span>
+            </>
+          ) : (
+            <>
+              <Plus className="size-4" />
+              <span>New Entry</span>
+            </>
+          )}
         </Button>
 
         {/* Search Input */}

@@ -1,26 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { JournalEntry } from "@/features/journal/types";
 import { useJournalStore } from "@/stores/journalStore";
 import { JournalSidebar } from "@/features/journal/components/journal-sidebar";
 import { JournalEditor } from "@/features/journal/components/journal-editor";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Plus, Sparkles, Menu, ArrowLeft } from "lucide-react";
+import { createJournalEntry as createJournalEntryAction } from "@/app/actions/journal";
+import { BookOpen, Plus, Sparkles, Menu, ArrowLeft, AlertCircle, X, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
-export function JournalView() {
+interface JournalViewProps {
+  initialEntries?: JournalEntry[];
+  initialError?: string;
+}
+
+export function JournalView({ initialEntries, initialError }: JournalViewProps) {
   const entries = useJournalStore((state) => state.entries);
   const activeEntryId = useJournalStore((state) => state.activeEntryId);
-  const createEntry = useJournalStore((state) => state.createEntry);
+  const setEntries = useJournalStore((state) => state.setEntries);
+  const addEntry = useJournalStore((state) => state.addEntry);
+
+  const [errorMessage, setErrorMessage] = useState<string | null>(initialError || null);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Mobile navigation view state
   const [mobileView, setMobileView] = useState<"sidebar" | "editor">("sidebar");
 
+  // Sync initial entries from server
+  useEffect(() => {
+    if (initialEntries) {
+      setEntries(initialEntries);
+    }
+  }, [initialEntries, setEntries]);
+
   const activeEntry = entries.find((e) => e.id === activeEntryId);
 
-  const handleCreateFirstEntry = () => {
-    createEntry("# My First Journal Entry\n\nReflect on your focus sessions and daily achievements...");
-    setMobileView("editor");
+  const handleCreateFirstEntry = async () => {
+    setIsCreating(true);
+    setErrorMessage(null);
+    try {
+      const result = await createJournalEntryAction(
+        "My First Journal Entry",
+        "# My First Journal Entry\n\nReflect on your focus sessions and daily achievements..."
+      );
+      if (result.success && result.data) {
+        addEntry(result.data);
+        setMobileView("editor");
+      } else {
+        setErrorMessage(result.error || "Failed to create journal entry");
+      }
+    } catch (err) {
+      console.error("Error creating entry:", err);
+      setErrorMessage("Network error while creating journal entry");
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleSelectMobileEntry = () => {
@@ -29,6 +64,25 @@ export function JournalView() {
 
   return (
     <div className="h-[calc(100vh-10rem)] min-h-[550px] w-full flex flex-col space-y-4">
+      {/* Error Alert Banner */}
+      {errorMessage && (
+        <div className="flex items-center justify-between p-3 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive text-sm">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="size-4 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            onClick={() => setErrorMessage(null)}
+            className="text-destructive hover:bg-destructive/10"
+            aria-label="Dismiss error"
+          >
+            <X className="size-3.5" />
+          </Button>
+        </div>
+      )}
+
       {/* Mobile Top View Switcher */}
       <div className="flex md:hidden items-center justify-between gap-2 p-2 rounded-lg border border-border/50 bg-card/40">
         <Button
@@ -110,9 +164,18 @@ export function JournalView() {
                       : "Select an entry from the sidebar or create a new entry to start writing."}
                   </p>
                 </div>
-                <Button onClick={handleCreateFirstEntry} className="gap-2">
-                  <Plus className="size-4" />
-                  Create Entry
+                <Button onClick={handleCreateFirstEntry} disabled={isCreating} className="gap-2">
+                  {isCreating ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="size-4" />
+                      Create Entry
+                    </>
+                  )}
                 </Button>
               </motion.div>
             </AnimatePresence>

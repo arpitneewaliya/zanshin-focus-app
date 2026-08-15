@@ -1,10 +1,14 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { JournalEntry } from "@/features/journal/types";
 import { useJournalStore } from "@/stores/journalStore";
 import { JournalPreview } from "@/features/journal/components/journal-preview";
 import { JournalDeleteDialog } from "@/features/journal/components/journal-delete-dialog";
+import {
+  updateJournalEntry as updateJournalEntryAction,
+  deleteJournalEntry as deleteJournalEntryAction,
+} from "@/app/actions/journal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,6 +19,7 @@ import {
   Trash2,
   CheckCircle,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,39 +28,88 @@ interface JournalEditorProps {
 }
 
 function JournalEditorContent({ entry }: { entry: JournalEntry }) {
-  const updateEntry = useJournalStore((state) => state.updateEntry);
-  const deleteEntry = useJournalStore((state) => state.deleteEntry);
+  const updateEntryStore = useJournalStore((state) => state.updateEntry);
+  const deleteEntryStore = useJournalStore((state) => state.deleteEntry);
   const viewMode = useJournalStore((state) => state.viewMode);
   const setViewMode = useJournalStore((state) => state.setViewMode);
 
   const [title, setTitle] = useState(entry.title);
   const [content, setContent] = useState(entry.content);
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "error">("saved");
+  const [lastSavedAt, setLastSavedAt] = useState(entry.updatedAt);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingUpdatesRef = useRef<{ title: string; content: string } | null>(null);
 
-  // Clean up timer on unmount
+  // Core save function
+  const performSave = useCallback(
+    async (targetTitle: string, targetContent: string) => {
+      setSaveStatus("saving");
+      try {
+        const result = await updateJournalEntryAction(entry.id, {
+          title: targetTitle,
+          content: targetContent,
+        });
+
+        if (result.success && result.data) {
+          updateEntryStore(entry.id, {
+            title: result.data.title,
+            content: result.data.content,
+            updatedAt: result.data.updatedAt,
+          });
+          setLastSavedAt(result.data.updatedAt);
+          setSaveStatus("saved");
+          pendingUpdatesRef.current = null;
+        } else {
+          console.error("Save failed:", result.error);
+          setSaveStatus("error");
+        }
+      } catch (err) {
+        console.error("Network error during journal autosave:", err);
+        setSaveStatus("error");
+      }
+    },
+    [entry.id, updateEntryStore]
+  );
+
+  // Debounced autosave trigger
+  const triggerAutosave = useCallback(
+    (newTitle: string, newContent: string) => {
+      // 1. Immediately update local store so search/sidebar reflect current edits
+      updateEntryStore(entry.id, { title: newTitle, content: newContent });
+      pendingUpdatesRef.current = { title: newTitle, content: newContent };
+      setSaveStatus("saving");
+
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+
+      saveTimerRef.current = setTimeout(() => {
+        performSave(newTitle, newContent);
+      }, 800);
+    },
+    [entry.id, updateEntryStore, performSave]
+  );
+
+  // Flush any pending save on unmount
   useEffect(() => {
     return () => {
       if (saveTimerRef.current) {
         clearTimeout(saveTimerRef.current);
       }
+      if (pendingUpdatesRef.current) {
+        const { title: finalTitle, content: finalContent } = pendingUpdatesRef.current;
+        updateJournalEntryAction(entry.id, {
+          title: finalTitle,
+          content: finalContent,
+        }).catch((err) => {
+          console.error("Failed to flush journal autosave on unmount:", err);
+        });
+      }
     };
-  }, []);
-
-  const triggerAutosave = (newTitle: string, newContent: string) => {
-    setSaveStatus("saving");
-
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current);
-    }
-
-    saveTimerRef.current = setTimeout(() => {
-      updateEntry(entry.id, { title: newTitle, content: newContent });
-      setSaveStatus("saved");
-    }, 500);
-  };
+  }, [entry.id]);
 
   const handleTitleChange = (val: string) => {
     setTitle(val);
@@ -67,21 +121,41 @@ function JournalEditorContent({ entry }: { entry: JournalEntry }) {
     triggerAutosave(title, val);
   };
 
-  const handleDeleteConfirm = () => {
-    deleteEntry(entry.id);
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteJournalEntryAction(entry.id);
+      if (result.success) {
+        deleteEntryStore(entry.id);
+      } else {
+        console.error("Delete failed:", result.error);
+      }
+    } catch (err) {
+      console.error("Network error deleting entry:", err);
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+    }
   };
 
   return (
     <div className="flex flex-col h-full bg-background rounded-xl border border-border/50 shadow-xs overflow-hidden">
       {/* Editor Header Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 sm:px-5 border-b border-border/40 bg-card/30">
-        {/* Left: Save status & Date */}
+        {/* Left: Save status & Timestamp */}
         <div className="flex items-center gap-3 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5 font-medium">
             {saveStatus === "saving" ? (
               <>
                 <Loader2 className="size-3.5 animate-spin text-amber-500" />
                 <span className="text-amber-600 dark:text-amber-400">Saving...</span>
+              </>
+            ) : saveStatus === "error" ? (
+              <>
+                <AlertCircle className="size-3.5 text-destructive" />
+                <span className="text-destructive font-medium">
+                  Failed to save (saved locally)
+                </span>
               </>
             ) : (
               <>
@@ -92,7 +166,11 @@ function JournalEditorContent({ entry }: { entry: JournalEntry }) {
           </span>
           <span className="text-border">|</span>
           <span className="text-muted-foreground/80">
-            Edited {new Date(entry.updatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
+            Edited{" "}
+            {new Date(lastSavedAt).toLocaleTimeString([], {
+              hour: "numeric",
+              minute: "2-digit",
+            })}
           </span>
         </div>
 
@@ -146,6 +224,7 @@ function JournalEditorContent({ entry }: { entry: JournalEntry }) {
             variant="ghost"
             size="icon-sm"
             onClick={() => setDeleteDialogOpen(true)}
+            disabled={isDeleting}
             title="Delete entry"
             className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           >

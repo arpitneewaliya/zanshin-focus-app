@@ -3,13 +3,18 @@ import { ArrowLeft } from "lucide-react";
 import { JournalView } from "@/features/journal/components/journal-view";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getJournalEntries } from "@/app/actions/journal";
 
 export const metadata = {
   title: "Personal Journal - Zanshin Focus",
   description: "Reflect on work sessions with rich text and markdown entries.",
 };
 
-export default function JournalPage() {
+export default async function JournalPage() {
+  const result = await getJournalEntries();
+  const initialEntries = result.success && result.data ? result.data : [];
+  const initialError = !result.success && !result.guest ? result.error : undefined;
+
   return (
     <div className="space-y-6">
       {/* Top Header & Breadcrumb */}
@@ -31,7 +36,7 @@ export default function JournalPage() {
       </div>
 
       {/* Main Journal View */}
-      <JournalView />
+      <JournalView initialEntries={initialEntries} initialError={initialError} />
     </div>
   );
 }
