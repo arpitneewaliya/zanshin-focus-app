@@ -89,7 +89,7 @@ export function SignUpForm() {
       }
 
       if (data?.session) {
-        router.push("/");
+        router.push("/dashboard");
         router.refresh();
       } else {
         setSuccessMessage(
