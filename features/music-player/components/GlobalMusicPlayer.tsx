@@ -174,9 +174,16 @@ export function GlobalMusicPlayer() {
     };
   }, []);
 
-  // Stop global music playback when entering Focus Mode
+  const isExcludedRoute =
+    !pathname ||
+    pathname === "/" ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/signup") ||
+    pathname.startsWith("/focus-mode");
+
+  // Stop global music playback on excluded routes (Landing, Auth, Focus Mode)
   useEffect(() => {
-    if (pathname && pathname.startsWith("/focus-mode")) {
+    if (isExcludedRoute) {
       if (howlRef.current && howlRef.current.playing()) {
         howlRef.current.pause();
       }
@@ -184,10 +191,10 @@ export function GlobalMusicPlayer() {
         setIsPlaying(false);
       }
     }
-  }, [pathname, isPlaying, setIsPlaying]);
+  }, [isExcludedRoute, isPlaying, setIsPlaying]);
 
-  // Exclude player when on Focus Mode route
-  if (!isMounted || (pathname && pathname.startsWith("/focus-mode"))) {
+  // Exclude player when not mounted or on excluded routes
+  if (!isMounted || isExcludedRoute) {
     return null;
   }
 
