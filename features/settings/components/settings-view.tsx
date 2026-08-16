@@ -24,7 +24,7 @@ export function SettingsView({ data, error }: SettingsViewProps) {
       {/* Top Header & Navigation */}
       <div className="flex items-center justify-between">
         <Link
-          href="/"
+          href="/dashboard"
           className={cn(
             buttonVariants({ variant: "ghost", size: "sm" }),
             "gap-2 text-muted-foreground hover:text-foreground"
