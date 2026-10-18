@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCachedUser } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { HabitStatus, Prisma } from "@prisma/client";
 import {
@@ -63,13 +63,9 @@ export async function getHabitsWithLogs(): Promise<
   ActionResult<{ habits: Habit[]; completionLogs: HabitCompletionLog[] }>
 > {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const user = await getCachedUser();
 
-    if (authError || !user) {
+    if (!user) {
       return { success: false, error: "Unauthorized. Please log in." };
     }
 

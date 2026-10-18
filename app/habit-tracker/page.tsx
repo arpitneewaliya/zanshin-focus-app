@@ -5,6 +5,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getHabitsWithLogs } from "@/app/actions/habits";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Habit Tracker - Zanshin Focus",
   description:

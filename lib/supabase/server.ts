@@ -1,5 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { cache } from "react";
+import type { User } from "@supabase/supabase-js";
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -26,3 +28,26 @@ export async function createClient() {
     }
   );
 }
+
+/**
+ * Per-request memoized user fetch for Server Components and Server Actions.
+ * React cache() ensures that multiple calls in the same server render pass
+ * (e.g. getUserProfile + getUserSettings on /settings) execute only ONCE.
+ */
+export const getCachedUser = cache(async (): Promise<User | null> => {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return null;
+    }
+    return user;
+  } catch (err) {
+    console.error("Error fetching cached user:", err);
+    return null;
+  }
+});

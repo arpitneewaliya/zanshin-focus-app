@@ -67,5 +67,28 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  return supabaseResponse;
+  // Forward user identity headers to downstream Server Components and Server Actions
+  const requestHeaders = new Headers(request.headers);
+  if (user) {
+    requestHeaders.set("x-user-id", user.id);
+    if (user.email) {
+      requestHeaders.set("x-user-email", user.email);
+    }
+  } else {
+    requestHeaders.delete("x-user-id");
+    requestHeaders.delete("x-user-email");
+  }
+
+  const finalResponse = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+
+  // Preserve any cookies set during session refresh
+  supabaseResponse.cookies.getAll().forEach((cookie) => {
+    finalResponse.cookies.set(cookie);
+  });
+
+  return finalResponse;
 }

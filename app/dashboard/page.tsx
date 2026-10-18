@@ -2,6 +2,8 @@ import { getDashboardData } from "@/app/actions/dashboard";
 import { DashboardView } from "@/features/dashboard/components/dashboard-view";
 import { DashboardData } from "@/features/dashboard/types";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Dashboard - Zanshin Focus",
   description:

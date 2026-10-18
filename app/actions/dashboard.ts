@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { getCachedUser } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { HabitStatus, Prisma } from "@prisma/client";
 import {
@@ -82,11 +82,7 @@ function createSnippet(content: string, maxLength: number = 140): string {
  */
 export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const user = await getCachedUser();
 
     const today = new Date();
     const todayStr = formatDateKey(today);
@@ -124,7 +120,7 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
     startOfWeek.setHours(0, 0, 0, 0);
 
     // Guest fallback if unauthenticated
-    if (authError || !user) {
+    if (!user) {
       const default7Days: DailyFocusPoint[] = last7DaysDates.map((item) => ({
         dateStr: item.dateStr,
         dayLabel: item.dayLabel,

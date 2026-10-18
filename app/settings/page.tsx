@@ -3,6 +3,8 @@ import { getUserSettings } from "@/app/actions/pomodoro";
 import { SettingsView } from "@/features/settings/components/settings-view";
 import { SettingsPageData, UserSettingsPreferences } from "@/features/settings/types";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Settings & Account - Zanshin Focus",
   description:

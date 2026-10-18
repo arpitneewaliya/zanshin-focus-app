@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCachedUser } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { JournalEntry, deriveTitle } from "@/features/journal/types";
 
@@ -34,13 +34,9 @@ function formatJournalEntry(entry: {
  */
 export async function getJournalEntries(): Promise<ActionResult<JournalEntry[]>> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const user = await getCachedUser();
 
-    if (authError || !user) {
+    if (!user) {
       return { success: false, error: "Unauthorized. Please log in." };
     }
 

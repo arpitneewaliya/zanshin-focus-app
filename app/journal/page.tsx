@@ -5,6 +5,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getJournalEntries } from "@/app/actions/journal";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Personal Journal - Zanshin Focus",
   description: "Reflect on work sessions with rich text and markdown entries.",

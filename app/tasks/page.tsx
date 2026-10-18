@@ -5,6 +5,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getTasks } from "@/app/actions/tasks";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Task Manager - Zanshin Focus",
   description: "Organize focus tasks, set priorities, track due dates, and manage daily productivity goals.",

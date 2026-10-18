@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCachedUser } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 import { TaskPriority as PrismaTaskPriority } from "@prisma/client";
 import { Task, TaskPriority } from "@/features/tasks/types";
@@ -39,13 +39,9 @@ function formatTask(task: {
  */
 export async function getTasks(): Promise<ActionResult<Task[]>> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const user = await getCachedUser();
 
-    if (authError || !user) {
+    if (!user) {
       return { success: false, error: "Unauthorized. Please log in." };
     }
 

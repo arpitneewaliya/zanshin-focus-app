@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCachedUser } from "@/lib/supabase/server";
 import { prisma } from "@/lib/prisma";
 
 export type UserProfile = {
@@ -23,13 +23,9 @@ export type ActionResult<T = unknown> = {
  */
 export async function getUserProfile(): Promise<ActionResult<UserProfile | null>> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const user = await getCachedUser();
 
-    if (authError || !user) {
+    if (!user) {
       return { success: true, data: null };
     }
 
