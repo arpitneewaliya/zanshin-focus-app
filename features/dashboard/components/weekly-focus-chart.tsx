@@ -54,42 +54,52 @@ export function WeeklyFocusChart({ data }: WeeklyFocusChartProps) {
                 {/* Minute label tooltip / hover */}
                 <span
                   className={cn(
-                    "text-[10px] font-mono transition-opacity duration-150 whitespace-nowrap",
+                    "text-[10px] font-mono transition-all duration-150 whitespace-nowrap",
                     point.minutes > 0
-                      ? "text-muted-foreground group-hover/bar:text-primary group-hover/bar:font-bold"
+                      ? "text-muted-foreground group-hover/bar:text-foreground group-hover/bar:font-bold"
                       : "opacity-0"
                   )}
                 >
-                  {point.minutes > 0 ? `${point.minutes}m` : "0"}
+                  {point.minutes > 0 ? `${point.minutes}m` : "0m"}
                 </span>
 
                 {/* Vertical Bar Container */}
-                <div className="w-full max-w-[28px] h-24 bg-muted/50 dark:bg-muted/30 rounded-md relative flex items-end overflow-hidden">
+                <div className={cn(
+                  "w-full max-w-[28px] h-24 rounded-md relative flex items-end overflow-hidden transition-colors",
+                  point.isToday 
+                    ? "bg-primary/10 border border-primary/20" 
+                    : "bg-muted/60 dark:bg-muted/30 border border-transparent"
+                )}>
                   {/* Filled Bar */}
                   <div
                     style={{ height: `${heightPercent}%` }}
                     className={cn(
                       "w-full rounded-b-[4px] rounded-t-[3px] transition-all duration-300 ease-out",
                       point.isToday
-                        ? "bg-primary shadow-sm"
+                        ? "bg-primary shadow-xs"
                         : point.minutes > 0
-                        ? "bg-primary/70 group-hover/bar:bg-primary"
+                        ? "bg-primary/35 dark:bg-primary/45 group-hover/bar:bg-primary/70"
                         : "bg-transparent"
                     )}
                   />
                 </div>
 
-                {/* Day Label */}
-                <span
-                  className={cn(
-                    "text-[11px] font-medium transition-colors",
-                    point.isToday
-                      ? "text-primary font-bold"
-                      : "text-muted-foreground group-hover/bar:text-foreground"
+                {/* Day Label with Today indicator */}
+                <div className="flex flex-col items-center gap-0.5">
+                  <span
+                    className={cn(
+                      "text-[11px] font-medium transition-colors",
+                      point.isToday
+                        ? "text-primary font-bold"
+                        : "text-muted-foreground group-hover/bar:text-foreground"
+                    )}
+                  >
+                    {point.dayLabel}
+                  </span>
+                  {point.isToday && (
+                    <span className="size-1 rounded-full bg-primary" />
                   )}
-                >
-                  {point.dayLabel}
-                </span>
+                </div>
               </div>
             );
           })}
