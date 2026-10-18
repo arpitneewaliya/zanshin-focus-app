@@ -21,6 +21,8 @@ import {
   VolumeX,
   ListMusic,
   Disc,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +36,7 @@ function formatTime(seconds: number): string {
 export function GlobalMusicPlayer() {
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const {
     currentTrack,
@@ -202,167 +205,229 @@ export function GlobalMusicPlayer() {
 
   return (
     <>
-      <AnimatePresence>
-        <motion.div
-          initial={{ y: 80, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 80, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-xl border-t border-border/60 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-2.5 sm:px-6"
-        >
-          <div className="container max-w-6xl mx-auto flex items-center justify-between gap-3 sm:gap-6">
-            {/* Left: Track Details */}
-            <div className="flex items-center gap-3 min-w-0 w-1/4 sm:w-1/3">
-              <div
-                onClick={() => toggleQueueOpen(true)}
-                className="relative h-10 w-10 sm:h-11 sm:w-11 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 cursor-pointer group overflow-hidden"
-              >
-                <Disc
-                  className={cn(
-                    "h-5 w-5 text-primary transition-transform duration-700",
-                    isPlaying ? "animate-spin" : "group-hover:scale-110"
-                  )}
-                  style={{ animationDuration: "6s" }}
-                />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-semibold truncate leading-tight text-foreground">
-                  {currentTrack.title}
-                </p>
-                <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5">
-                  {currentTrack.artist}
-                </p>
-              </div>
+      <AnimatePresence mode="wait">
+        {isMinimized ? (
+          <motion.div
+            key="minimized-pill"
+            initial={{ scale: 0.85, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.85, opacity: 0, y: 20 }}
+            transition={{ type: "spring", stiffness: 350, damping: 25 }}
+            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 p-1.5 pl-3 rounded-full bg-background/95 border border-border/80 shadow-lg backdrop-blur-xl group hover:border-primary/50 transition-all"
+          >
+            <div
+              onClick={() => togglePlay()}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <Disc
+                className={cn(
+                  "size-4 text-primary shrink-0 transition-transform duration-700",
+                  isPlaying ? "animate-spin" : ""
+                )}
+                style={{ animationDuration: "6s" }}
+              />
+              <span className="text-xs font-medium text-foreground max-w-[110px] sm:max-w-[150px] truncate select-none">
+                {currentTrack.title}
+              </span>
             </div>
 
-            {/* Center: Controls & Progress Bar */}
-            <div className="flex flex-col items-center justify-center gap-1.5 flex-1 max-w-md">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={toggleShuffle}
-                  className={cn(
-                    "h-8 w-8 text-muted-foreground hover:text-foreground",
-                    shuffle && "text-primary hover:text-primary bg-primary/10"
-                  )}
-                  title={shuffle ? "Shuffle On" : "Shuffle Off"}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={togglePlay}
+              className="h-7 w-7 rounded-full text-foreground hover:bg-muted"
+              title={isPlaying ? "Pause" : "Play"}
+            >
+              {isPlaying ? (
+                <Pause className="size-3.5 fill-current" />
+              ) : (
+                <Play className="size-3.5 fill-current translate-x-[0.5px]" />
+              )}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMinimized(false)}
+              className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
+              title="Expand player"
+            >
+              <ChevronUp className="size-3.5" />
+            </Button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="expanded-bar"
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed bottom-0 left-0 right-0 z-40 bg-background/90 backdrop-blur-xl border-t border-border/60 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-2.5 sm:px-6"
+          >
+            <div className="container max-w-6xl mx-auto flex items-center justify-between gap-3 sm:gap-6">
+              {/* Left: Track Details */}
+              <div className="flex items-center gap-3 min-w-0 w-1/4 sm:w-1/3">
+                <div
+                  onClick={() => toggleQueueOpen(true)}
+                  className="relative h-10 w-10 sm:h-11 sm:w-11 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 cursor-pointer group overflow-hidden"
                 >
-                  <Shuffle className="h-3.5 w-3.5" />
+                  <Disc
+                    className={cn(
+                      "h-5 w-5 text-primary transition-transform duration-700",
+                      isPlaying ? "animate-spin" : "group-hover:scale-110"
+                    )}
+                    style={{ animationDuration: "6s" }}
+                  />
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm font-semibold truncate leading-tight text-foreground">
+                    {currentTrack.title}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/80 truncate mt-0.5">
+                    {currentTrack.artist}
+                  </p>
+                </div>
+              </div>
+
+              {/* Center: Controls & Progress Bar */}
+              <div className="flex flex-col items-center justify-center gap-1.5 flex-1 max-w-md">
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleShuffle}
+                    className={cn(
+                      "h-8 w-8 text-muted-foreground hover:text-foreground",
+                      shuffle && "text-primary hover:text-primary bg-primary/10"
+                    )}
+                    title={shuffle ? "Shuffle On" : "Shuffle Off"}
+                  >
+                    <Shuffle className="h-3.5 w-3.5" />
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={prevTrack}
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    title="Previous Track"
+                  >
+                    <SkipBack className="h-4 w-4 fill-current" />
+                  </Button>
+
+                  <Button
+                    variant="default"
+                    size="icon"
+                    onClick={togglePlay}
+                    className="h-9 w-9 rounded-full shadow-sm bg-primary text-primary-foreground hover:scale-105 transition-transform"
+                    title={isPlaying ? "Pause" : "Play"}
+                  >
+                    {isPlaying ? (
+                      <Pause className="h-4 w-4 fill-current" />
+                    ) : (
+                      <Play className="h-4 w-4 fill-current translate-x-[0.5px]" />
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={nextTrack}
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    title="Next Track"
+                  >
+                    <SkipForward className="h-4 w-4 fill-current" />
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleRepeatMode}
+                    className={cn(
+                      "h-8 w-8 text-muted-foreground hover:text-foreground",
+                      repeatMode !== "off" && "text-primary hover:text-primary bg-primary/10"
+                    )}
+                    title={`Repeat: ${repeatMode}`}
+                  >
+                    {repeatMode === "one" ? (
+                      <Repeat1 className="h-3.5 w-3.5" />
+                    ) : (
+                      <Repeat className="h-3.5 w-3.5" />
+                    )}
+                  </Button>
+                </div>
+
+                {/* Progress Slider */}
+                <div className="w-full flex items-center gap-2 px-1">
+                  <span className="text-[10px] font-mono text-muted-foreground w-8 text-right select-none">
+                    {formatTime(progress)}
+                  </span>
+                  <Slider
+                    min={0}
+                    max={duration || 100}
+                    step={1}
+                    value={progress}
+                    onValueChange={(val) => requestSeek(val)}
+                    className="flex-1"
+                  />
+                  <span className="text-[10px] font-mono text-muted-foreground w-8 select-none">
+                    {formatTime(duration)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Right: Volume & Queue Toggle */}
+              <div className="flex items-center justify-end gap-2 w-1/4 sm:w-1/3">
+                <div className="hidden sm:flex items-center gap-1.5 w-28">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={toggleMute}
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0"
+                    title={isMuted ? "Unmute" : "Mute"}
+                  >
+                    {isMuted || volume === 0 ? (
+                      <VolumeX className="h-4 w-4" />
+                    ) : volume < 0.5 ? (
+                      <Volume1 className="h-4 w-4" />
+                    ) : (
+                      <Volume2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Slider
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={isMuted ? 0 : volume}
+                    onValueChange={(val) => setVolume(val)}
+                    className="w-16"
+                  />
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => toggleQueueOpen(true)}
+                  className="h-8 gap-1.5 text-xs border-border/60 hover:bg-muted/60"
+                >
+                  <ListMusic className="h-3.5 w-3.5 text-primary" />
+                  <span className="hidden md:inline font-medium">Playlist</span>
                 </Button>
 
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={prevTrack}
+                  onClick={() => setIsMinimized(true)}
                   className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  title="Previous Track"
+                  title="Minimize music bar"
                 >
-                  <SkipBack className="h-4 w-4 fill-current" />
+                  <ChevronDown className="h-4 w-4" />
                 </Button>
-
-                <Button
-                  variant="default"
-                  size="icon"
-                  onClick={togglePlay}
-                  className="h-9 w-9 rounded-full shadow-sm bg-primary text-primary-foreground hover:scale-105 transition-transform"
-                  title={isPlaying ? "Pause" : "Play"}
-                >
-                  {isPlaying ? (
-                    <Pause className="h-4 w-4 fill-current" />
-                  ) : (
-                    <Play className="h-4 w-4 fill-current translate-x-[0.5px]" />
-                  )}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={nextTrack}
-                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                  title="Next Track"
-                >
-                  <SkipForward className="h-4 w-4 fill-current" />
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={toggleRepeatMode}
-                  className={cn(
-                    "h-8 w-8 text-muted-foreground hover:text-foreground",
-                    repeatMode !== "off" && "text-primary hover:text-primary bg-primary/10"
-                  )}
-                  title={`Repeat: ${repeatMode}`}
-                >
-                  {repeatMode === "one" ? (
-                    <Repeat1 className="h-3.5 w-3.5" />
-                  ) : (
-                    <Repeat className="h-3.5 w-3.5" />
-                  )}
-                </Button>
-              </div>
-
-              {/* Progress Slider */}
-              <div className="w-full flex items-center gap-2 px-1">
-                <span className="text-[10px] font-mono text-muted-foreground w-8 text-right select-none">
-                  {formatTime(progress)}
-                </span>
-                <Slider
-                  min={0}
-                  max={duration || 100}
-                  step={1}
-                  value={progress}
-                  onValueChange={(val) => requestSeek(val)}
-                  className="flex-1"
-                />
-                <span className="text-[10px] font-mono text-muted-foreground w-8 select-none">
-                  {formatTime(duration)}
-                </span>
               </div>
             </div>
-
-            {/* Right: Volume & Queue Toggle */}
-            <div className="flex items-center justify-end gap-2 w-1/4 sm:w-1/3">
-              <div className="hidden sm:flex items-center gap-1.5 w-28">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={toggleMute}
-                  className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0"
-                  title={isMuted ? "Unmute" : "Mute"}
-                >
-                  {isMuted || volume === 0 ? (
-                    <VolumeX className="h-4 w-4" />
-                  ) : volume < 0.5 ? (
-                    <Volume1 className="h-4 w-4" />
-                  ) : (
-                    <Volume2 className="h-4 w-4" />
-                  )}
-                </Button>
-                <Slider
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={isMuted ? 0 : volume}
-                  onValueChange={(val) => setVolume(val)}
-                  className="w-16"
-                />
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => toggleQueueOpen(true)}
-                className="h-8 gap-1.5 text-xs border-border/60 hover:bg-muted/60"
-              >
-                <ListMusic className="h-3.5 w-3.5 text-primary" />
-                <span className="hidden md:inline font-medium">Playlist</span>
-              </Button>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       <TrackList />
