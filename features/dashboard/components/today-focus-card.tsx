@@ -34,8 +34,8 @@ export function TodayFocusCard({ metrics }: TodayFocusCardProps) {
 
   return (
     <Card className="h-full flex flex-col justify-between hover:border-primary/40 transition-colors group relative overflow-hidden">
-      {/* Subtle background glow on hover */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl pointer-events-none group-hover:bg-primary/10 transition-colors" />
+      {/* Subtle background glow on hover (dark mode only to avoid smudge in light mode) */}
+      <div className="hidden dark:block absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none group-hover:bg-primary/20 transition-all duration-300" />
 
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-2">
