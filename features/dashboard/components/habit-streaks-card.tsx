@@ -58,14 +58,17 @@ export function HabitStreaksCard({ habits }: HabitStreaksCardProps) {
                   className="p-2.5 rounded-lg bg-muted/30 border border-border/40 hover:border-border transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   {/* Left: Habit Info & Streak */}
-                  <div className="space-y-1 min-w-[140px]">
-                    <div className="flex items-center gap-2">
-                      <span className={cn("size-2 rounded-full", colorClasses.dot)} />
-                      <span className="font-medium text-sm leading-tight text-foreground truncate max-w-[150px]">
+                  <div className="space-y-1.5 flex-1 min-w-0 pr-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className={cn("size-2 rounded-full shrink-0", colorClasses.dot)} />
+                      <span 
+                        className="font-medium text-sm leading-tight text-foreground truncate"
+                        title={habit.name}
+                      >
                         {habit.name}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
                       <span className="inline-flex items-center gap-0.5 font-semibold text-foreground">
                         <Flame className="size-3 text-amber-500 fill-amber-500" />
                         {streak.currentStreak}{" "}
@@ -79,14 +82,14 @@ export function HabitStreaksCard({ habits }: HabitStreaksCardProps) {
                           {streak.longestStreak}
                         </span>
                       )}
-                      <span className="text-[10px] text-muted-foreground px-1.5 py-0.2 bg-background/80 rounded border border-border/50">
+                      <span className="text-[10px] text-muted-foreground px-1.5 py-0.5 bg-background/80 rounded border border-border/50 font-medium">
                         {freqLabel}
                       </span>
                     </div>
                   </div>
 
                   {/* Right: Compact 5-Week Mini Heatmap Grid */}
-                  <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
+                  <div className="flex items-center gap-1 shrink-0 pb-0.5 self-start sm:self-center">
                     {miniGrid.map((week, wIdx) => (
                       <div key={wIdx} className="flex flex-col gap-1">
                         {week.map((cell) => {
@@ -102,9 +105,9 @@ export function HabitStreaksCard({ habits }: HabitStreaksCardProps) {
                                 "size-2.5 rounded-[2px] transition-colors",
                                 isCompleted && colorClasses.heatmapCompleted,
                                 isMissed && "bg-rose-500/30 border border-rose-500/40",
-                                !isCompleted && !isMissed && isScheduled && "bg-muted-foreground/15 border border-border/50",
-                                !isCompleted && !isMissed && !isScheduled && "bg-muted/40 opacity-40",
-                                cell.isToday && "ring-1 ring-primary"
+                                !isCompleted && !isMissed && isScheduled && "bg-muted-foreground/20 border border-border/60",
+                                !isCompleted && !isMissed && !isScheduled && "bg-muted/40 border border-transparent opacity-30",
+                                cell.isToday && "ring-1 ring-primary ring-offset-1 ring-offset-background"
                               )}
                             />
                           );
