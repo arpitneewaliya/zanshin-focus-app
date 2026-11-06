@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Timer, Target, ListTodo, Flame, BookOpen, ArrowRight } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 
 const quickLinks = [
   {
@@ -53,17 +52,13 @@ export function QuickNavBar() {
 
       <CardContent className="space-y-2 pt-1">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {quickLinks.map((link, idx) => {
+          {quickLinks.slice(0, 4).map((link) => {
             const Icon = link.icon;
-            const isLastOdd = idx === quickLinks.length - 1 && quickLinks.length % 2 !== 0;
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={cn(
-                  "p-2.5 rounded-lg bg-muted/30 border border-border/40 hover:border-primary/50 hover:bg-muted/60 transition-all flex items-center justify-between group/link",
-                  isLastOdd && "sm:col-span-2"
-                )}
+                className="p-2.5 rounded-lg bg-muted/30 border border-border/40 hover:border-primary/50 hover:bg-muted/60 transition-all flex items-center justify-between group/link"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="p-1.5 rounded-md bg-background text-foreground group-hover/link:bg-primary group-hover/link:text-primary-foreground transition-colors shrink-0">
@@ -75,12 +70,7 @@ export function QuickNavBar() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[10px] text-muted-foreground/70 font-mono px-1.5 py-0.5 rounded bg-background/50 border border-border/40">
-                    {link.badge}
-                  </span>
-                  <ArrowRight className="size-3 text-muted-foreground opacity-0 -translate-x-1 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all text-primary shrink-0" />
-                </div>
+                <ArrowRight className="size-3 text-muted-foreground opacity-0 -translate-x-1 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all text-primary shrink-0" />
               </Link>
             );
           })}

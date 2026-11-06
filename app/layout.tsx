@@ -6,8 +6,6 @@ import Link from "next/link";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserNav } from "@/components/user-nav";
-import { MainNav } from "@/components/main-nav";
-import { BrandLogo } from "@/components/brand-logo";
 import { GlobalMusicPlayer } from "@/features/music-player/components/GlobalMusicPlayer";
 import { Analytics } from '@vercel/analytics/next';
 
@@ -46,10 +44,12 @@ export default function RootLayout({
         >
           <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/85 backdrop-blur-md">
             <div className="container max-w-6xl mx-auto flex h-14 items-center justify-between px-4 sm:px-6">
-              <div className="flex items-center gap-6">
-                <BrandLogo />
-                <MainNav />
-              </div>
+              <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity">
+                <span className="h-2 w-2 rounded-full bg-primary" />
+                <span className="font-semibold text-lg tracking-tight font-heading">
+                  Zanshin Focus
+                </span>
+              </Link>
               <div className="flex items-center gap-3">
                 <UserNav />
                 <ThemeToggle />

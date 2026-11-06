@@ -32,8 +32,9 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Define which routes require authentication (dashboard allows guest preview)
+  // Define which routes require authentication
   const protectedPaths = [
+    "/dashboard",
     "/tasks",
     "/journal",
     "/habit-tracker",
