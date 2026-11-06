@@ -1,184 +1,45 @@
 "use client";
 
-import React, { useState } from "react";
 import Image from "next/image";
-import {
-  LayoutDashboard,
-  Timer,
-  ListTodo,
-  Flame,
-  BookOpen,
-  Target,
-} from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { useState } from "react";
+import { BookOpen, Flame, LayoutDashboard, ListTodo, Target, Timer } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 const previewTabs = [
-  {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    route: "zanshin-focus.app/dashboard",
-    alt: "Zanshin Focus Dashboard Workspace Preview",
-    darkImage: "/images/dashboard-preview-dark.png",
-    lightImage: "/images/dashboard-preview-light.png",
-  },
-  {
-    id: "timer",
-    label: "Pomodoro Timer",
-    shortLabel: "Timer",
-    icon: Timer,
-    route: "zanshin-focus.app/timer",
-    alt: "Zanshin Focus Pomodoro Timer Preview",
-    darkImage: "/images/timer-preview-dark.png",
-    lightImage: "/images/timer-preview-light.png",
-  },
-  {
-    id: "tasks",
-    label: "Task Manager",
-    shortLabel: "Tasks",
-    icon: ListTodo,
-    route: "zanshin-focus.app/tasks",
-    alt: "Zanshin Focus Task Manager Preview",
-    darkImage: "/images/tasks-preview-dark.png",
-    lightImage: "/images/tasks-preview-light.png",
-  },
-  {
-    id: "habits",
-    label: "Habit Tracker",
-    shortLabel: "Habits",
-    icon: Flame,
-    route: "zanshin-focus.app/habit-tracker",
-    alt: "Zanshin Focus Habit Tracker Preview",
-    darkImage: "/images/habits-preview-dark.png",
-    lightImage: "/images/habits-preview-light.png",
-  },
-  {
-    id: "journal",
-    label: "Personal Journal",
-    shortLabel: "Journal",
-    icon: BookOpen,
-    route: "zanshin-focus.app/journal",
-    alt: "Zanshin Focus Personal Journal Preview",
-    darkImage: "/images/journal-preview-dark.png",
-    lightImage: "/images/journal-preview-light.png",
-  },
-  {
-    id: "focus-mode",
-    label: "Focus Sanctuary",
-    shortLabel: "Focus Mode",
-    icon: Target,
-    route: "zanshin-focus.app/focus-mode",
-    alt: "Zanshin Focus Sanctuary Mode Preview",
-    darkImage: "/images/focus-mode-preview-dark.png",
-    lightImage: "/images/focus-mode-preview-light.png",
-  },
-];
+  { id: "dashboard", label: "Dashboard", shortLabel: "Home", icon: LayoutDashboard, route: "dashboard", title: "See the shape of your day.", description: "A quiet overview connects today’s focus, priorities, habits, and reflection without demanding your attention.", darkImage: "/images/dashboard-preview-dark.png", lightImage: "/images/dashboard-preview-light.png", width: 1518, height: 1018 },
+  { id: "timer", label: "Pomodoro", shortLabel: "Timer", icon: Timer, route: "timer", title: "Protect time for what matters.", description: "Build a sustainable cadence with a timer designed for deep work, deliberate breaks, and a visible sense of progress.", darkImage: "/images/timer-preview-dark.png", lightImage: "/images/timer-preview-light.png", width: 1472, height: 996 },
+  { id: "tasks", label: "Tasks", shortLabel: "Tasks", icon: ListTodo, route: "tasks", title: "Turn intention into a next step.", description: "Keep priorities clear with calm task capture, due dates, and just enough structure to move forward.", darkImage: "/images/tasks-preview-dark.png", lightImage: "/images/tasks-preview-light.png", width: 1480, height: 1014 },
+  { id: "habits", label: "Habits", shortLabel: "Habits", icon: Flame, route: "habit-tracker", title: "Let momentum be honest.", description: "Scheduled streaks and heatmaps show progress without punishing the days you intentionally leave open.", darkImage: "/images/habits-preview-dark.png", lightImage: "/images/habits-preview-light.png", width: 1468, height: 1003 },
+  { id: "journal", label: "Journal", shortLabel: "Journal", icon: BookOpen, route: "journal", title: "Leave space to reflect.", description: "Capture the thinking behind your work in a focused Markdown journal that is easy to revisit.", darkImage: "/images/journal-preview-dark.png", lightImage: "/images/journal-preview-light.png", width: 1479, height: 1008 },
+  { id: "focus-mode", label: "Sanctuary", shortLabel: "Focus", icon: Target, route: "focus-mode", title: "Enter a room made for focus.", description: "A full-screen sanctuary combines a minimal clock with immersive ambient soundscapes.", darkImage: "/images/focus-mode-preview-dark.png", lightImage: "/images/focus-mode-preview-light.png", width: 1337, height: 1079 },
+] as const;
 
 export function VisualCenterpiece() {
-  const [activeTabId, setActiveTabId] = useState("dashboard");
-
-  const currentTab =
-    previewTabs.find((t) => t.id === activeTabId) || previewTabs[0];
+  const [activeTabId, setActiveTabId] = useState<(typeof previewTabs)[number]["id"]>("dashboard");
+  const reduceMotion = useReducedMotion();
+  const currentTab = previewTabs.find((tab) => tab.id === activeTabId) ?? previewTabs[0];
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className="relative my-8 sm:my-14 max-w-5xl mx-auto space-y-4"
-    >
-      {/* Outer ambient glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4/5 h-4/5 bg-primary/5 rounded-3xl blur-3xl pointer-events-none -z-10" />
-
-      {/* Interactive Tabs Selector */}
-      <div className="flex items-center justify-start sm:justify-center overflow-x-auto pb-1 px-1 no-scrollbar gap-1.5 sm:gap-2">
-        <div className="flex items-center p-1 rounded-xl bg-muted/60 border border-border/60 shadow-xs backdrop-blur-sm">
-          {previewTabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = tab.id === activeTabId;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTabId(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
-                  isActive
-                    ? "bg-background text-foreground shadow-xs font-semibold border border-border/60"
-                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
-                }`}
-              >
-                <Icon className={`size-3.5 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.shortLabel || tab.label}</span>
-              </button>
-            );
-          })}
+    <section id="workspace" aria-labelledby="workspace-title" className="scroll-mt-24 py-14 sm:py-20">
+      <div className="mx-auto max-w-2xl space-y-4 text-center">
+        <span className="zen-kicker"><span className="size-1.5 rounded-full bg-[var(--zen-indigo)]" />One workspace, five practices</span>
+        <h2 id="workspace-title" className="font-display text-4xl tracking-[-0.035em] sm:text-5xl">A calmer way to move through your work.</h2>
+        <p className="text-sm leading-6 text-muted-foreground sm:text-base">Plan with intention, focus without friction, and reflect without switching between scattered tools.</p>
+      </div>
+      <div className="mt-9 flex justify-start overflow-x-auto pb-2 sm:justify-center">
+        <div role="tablist" aria-label="Product workspace previews" className="zen-panel flex min-w-max gap-1 rounded-2xl p-1.5">
+          {previewTabs.map((tab) => { const Icon = tab.icon; const isActive = tab.id === activeTabId; return <button key={tab.id} type="button" role="tab" aria-selected={isActive} aria-controls="workspace-preview" onClick={() => setActiveTabId(tab.id)} className={`zen-focus-ring flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium transition-colors ${isActive ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}><Icon className="size-3.5" /><span className="hidden sm:inline">{tab.label}</span><span className="sm:hidden">{tab.shortLabel}</span></button>; })}
         </div>
       </div>
-
-      {/* Frame wrapper with gradient border and shadow */}
-      <div className="p-1 sm:p-1.5 rounded-2xl sm:rounded-3xl bg-gradient-to-b from-border/90 via-border/50 to-border/20 shadow-2xl">
-        <div className="rounded-xl sm:rounded-2xl border border-border/70 bg-card/95 backdrop-blur-md overflow-hidden text-card-foreground shadow-xl">
-          {/* Top Window Chrome */}
-          <div className="px-4 py-3 border-b border-border/50 bg-muted/40 flex items-center justify-between gap-3">
-            {/* Window control dots */}
-            <div className="flex items-center gap-2">
-              <span className="size-3 rounded-full bg-rose-500/80" />
-              <span className="size-3 rounded-full bg-amber-500/80" />
-              <span className="size-3 rounded-full bg-emerald-500/80" />
-            </div>
-
-            {/* Address / Route badge */}
-            <div className="px-3 py-1 rounded-md bg-background/80 border border-border/60 text-[11px] font-mono text-muted-foreground flex items-center gap-2">
-              <span className="size-1.5 rounded-full bg-primary" />
-              <span>{currentTab.route}</span>
-            </div>
-
-            {/* Live Indicator */}
-            <div className="flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="hidden sm:inline">Active Preview</span>
-            </div>
-          </div>
-
-          {/* Screenshot Display with Smooth Transition */}
-          <div className="relative w-full bg-background/40 overflow-hidden min-h-[240px]">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentTab.id}
-                initial={{ opacity: 0, scale: 0.99 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.99 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
-                className="w-full"
-              >
-                {/* Dark Mode Screenshot */}
-                <Image
-                  src={currentTab.darkImage}
-                  alt={`${currentTab.alt} (Dark Mode)`}
-                  width={1920}
-                  height={1080}
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 95vw, 1024px"
-                  className="w-full h-auto object-cover object-top hidden dark:block"
-                />
-
-                {/* Light Mode Screenshot */}
-                <Image
-                  src={currentTab.lightImage}
-                  alt={`${currentTab.alt} (Light Mode)`}
-                  width={1920}
-                  height={1080}
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 95vw, 1024px"
-                  className="w-full h-auto object-cover object-top block dark:hidden"
-                />
-              </motion.div>
-            </AnimatePresence>
+      <div className="mt-6 grid items-center gap-6 lg:grid-cols-[0.72fr_1.28fr]">
+        <AnimatePresence mode="wait"><motion.div key={currentTab.id} initial={reduceMotion ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={reduceMotion ? undefined : { opacity: 0, y: -8 }} transition={{ duration: 0.2 }} className="order-2 space-y-4 px-1 lg:order-1 lg:px-6"><p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[color:var(--zen-tea)]">/{currentTab.route}</p><h3 className="font-display text-3xl tracking-[-0.03em] sm:text-4xl">{currentTab.title}</h3><p className="max-w-md text-sm leading-7 text-muted-foreground sm:text-base">{currentTab.description}</p></motion.div></AnimatePresence>
+        <div id="workspace-preview" role="tabpanel" className="order-1 overflow-hidden rounded-2xl border border-border/70 bg-card p-1.5 shadow-[0_24px_60px_-34px_color-mix(in_oklch,var(--foreground)_58%,transparent)] lg:order-2 sm:rounded-3xl sm:p-2">
+          <div className="overflow-hidden rounded-xl border border-border/70 bg-background sm:rounded-2xl">
+            <div className="flex items-center justify-between border-b border-border/60 bg-muted/35 px-4 py-3"><span className="font-mono text-[10px] text-muted-foreground">zanshin.focus/{currentTab.route}</span><span className="flex items-center gap-1.5 font-mono text-[10px] text-[color:var(--zen-tea)]"><span className="size-1.5 rounded-full bg-[var(--zen-tea)]" />PREVIEW</span></div>
+            <AnimatePresence mode="wait"><motion.div key={currentTab.id} initial={reduceMotion ? false : { opacity: 0, scale: 0.995 }} animate={{ opacity: 1, scale: 1 }} exit={reduceMotion ? undefined : { opacity: 0, scale: 0.995 }} transition={{ duration: 0.2 }}><Image src={currentTab.lightImage} alt={`${currentTab.title} Zanshin Focus workspace preview in light mode`} width={currentTab.width} height={currentTab.height} sizes="(max-width: 1024px) 100vw, 65vw" className="block h-auto w-full dark:hidden" /><Image src={currentTab.darkImage} alt={`${currentTab.title} Zanshin Focus workspace preview in dark mode`} width={currentTab.width} height={currentTab.height} sizes="(max-width: 1024px) 100vw, 65vw" className="hidden h-auto w-full dark:block" /></motion.div></AnimatePresence>
           </div>
         </div>
       </div>
-    </motion.section>
+    </section>
   );
 }

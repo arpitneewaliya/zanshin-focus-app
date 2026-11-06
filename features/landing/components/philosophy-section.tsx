@@ -1,82 +1,23 @@
 "use client";
 
-import React from "react";
-import { motion } from "motion/react";
-import { ShieldCheck, Compass, Zap, Sparkles } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Compass, Sparkles, Target } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 
 const pillars = [
-  {
-    number: "01",
-    icon: Compass,
-    title: "Relaxed Alertness",
-    description:
-      "In martial arts, Zanshin (残心) refers to sustained, calm awareness before, during, and after an action. We build software that respects your calm rather than hijacking your dopamine.",
-  },
-  {
-    number: "02",
-    icon: ShieldCheck,
-    title: "Zero Context-Switching",
-    description:
-      "Juggling disconnected note apps, timers, task lists, and habit trackers creates micro-distractions. Zanshin connects all four seamlessly into one cohesive rhythm.",
-  },
-  {
-    number: "03",
-    icon: Zap,
-    title: "Honest Streak Logic",
-    description:
-      "Habits configured for 3 days a week shouldn't break your streak on Tuesday and Thursday. Our scheduled streak engine honors rest days without guilt.",
-  },
+  { number: "01", icon: Compass, label: "Calm", title: "Begin with relaxed alertness.", description: "Zanshin is sustained, composed awareness. The interface makes space for that state before the work begins." },
+  { number: "02", icon: Target, label: "Focus", title: "Keep the work in one place.", description: "Timer, priorities, habit practice, and notes work together so you do not have to reconstruct your context." },
+  { number: "03", icon: Sparkles, label: "Reflect", title: "Let progress feel human.", description: "Honest streak logic and quiet reflection make room for rest, learning, and a more sustainable pace." },
 ];
 
 export function PhilosophySection() {
+  const reduceMotion = useReducedMotion();
   return (
-    <section className="py-12 sm:py-16 space-y-10 max-w-5xl mx-auto">
-      {/* Section Header */}
-      <div className="text-center space-y-3 max-w-2xl mx-auto">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono bg-muted/60 text-muted-foreground border border-border/60">
-          <Sparkles className="size-3 text-primary" />
-          The Philosophy of Zanshin
+    <section id="philosophy" aria-labelledby="philosophy-title" className="scroll-mt-24 border-y border-border/60 py-16 sm:py-24">
+      <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+        <div className="space-y-5 lg:sticky lg:top-28 lg:self-start"><span className="zen-kicker"><Sparkles className="size-3 text-[color:var(--zen-indigo)]" />The philosophy of Zanshin</span><h2 id="philosophy-title" className="font-display text-4xl tracking-[-0.035em] sm:text-5xl">A rhythm for work that still leaves room to breathe.</h2><p className="max-w-md text-sm leading-7 text-muted-foreground sm:text-base">Productivity is not about carrying more. It is about giving the work that matters your full, undivided attention.</p></div>
+        <div className="relative space-y-3 before:absolute before:bottom-6 before:left-6 before:top-6 before:w-px before:bg-border sm:before:left-8">
+          {pillars.map((pillar, index) => { const Icon = pillar.icon; return <motion.article key={pillar.number} initial={reduceMotion ? false : { opacity: 0, x: 12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.35, delay: reduceMotion ? 0 : index * 0.08 }} className="relative grid grid-cols-[3rem_1fr] gap-4 rounded-2xl p-3 sm:grid-cols-[4rem_1fr] sm:gap-5 sm:p-5"><div className="relative z-10 flex size-12 flex-col items-center justify-center rounded-2xl border border-border/80 bg-background shadow-sm sm:size-16"><span className="font-mono text-[10px] text-muted-foreground">{pillar.number}</span><Icon className="mt-1 size-4 text-[color:var(--zen-indigo)]" /></div><div className="pt-1"><p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[color:var(--zen-tea)]">{pillar.label}</p><h3 className="mt-1 text-lg font-semibold tracking-tight">{pillar.title}</h3><p className="mt-2 max-w-lg text-sm leading-6 text-muted-foreground">{pillar.description}</p></div></motion.article>; })}
         </div>
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight font-heading text-foreground">
-          Built for clarity, speed, and deep concentration.
-        </h2>
-        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-          Productivity isn't about cramming more tasks into your day. It's about bringing complete presence and care to what truly matters.
-        </p>
-      </div>
-
-      {/* 3 Pillars */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-        {pillars.map((pillar, index) => {
-          const Icon = pillar.icon;
-          return (
-            <motion.div
-              key={pillar.number}
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
-            >
-              <Card className="h-full border-border/70 bg-card/60 hover:bg-card hover:border-primary/40 transition-all duration-200 shadow-xs">
-                <CardHeader className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs font-bold text-muted-foreground/60">
-                      {pillar.number}
-                    </span>
-                    <Icon className="size-4 text-primary" />
-                  </div>
-                  <CardTitle className="text-base font-semibold tracking-tight">
-                    {pillar.title}
-                  </CardTitle>
-                  <CardDescription className="text-xs sm:text-sm leading-relaxed text-muted-foreground">
-                    {pillar.description}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </motion.div>
-          );
-        })}
       </div>
     </section>
   );

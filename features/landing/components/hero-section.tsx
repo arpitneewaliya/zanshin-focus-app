@@ -1,105 +1,46 @@
 "use client";
 
-import React from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Sparkles, LogIn } from "lucide-react";
+import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
+const signals = ["One quiet workspace", "Five focused tools", "No clutter"];
+
 export function HeroSection() {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <section className="relative pt-6 pb-12 sm:pt-12 sm:pb-16 text-center space-y-6 max-w-4xl mx-auto">
-      {/* Background ambient radial glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[540px] h-[340px] sm:h-[400px] bg-primary/5 rounded-full blur-3xl pointer-events-none -z-10" />
-
-      {/* Pill Badge */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-        className="flex items-center justify-center"
-      >
-        <Badge
-          variant="outline"
-          className="gap-2 px-3.5 py-1.5 rounded-full text-xs font-mono border-primary/20 bg-background/80 backdrop-blur-sm shadow-xs"
-        >
-          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-          <span className="text-muted-foreground">残心 Zanshin</span>
-          <span className="text-muted-foreground/50">•</span>
-          <span className="text-foreground font-medium">Unified Focus Workspace</span>
-        </Badge>
-      </motion.div>
-
-      {/* Primary Headline */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1, ease: "easeOut" }}
-        className="space-y-4"
-      >
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight font-heading leading-[1.1] text-foreground">
-          Calm depth for your{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-foreground via-foreground/80 to-muted-foreground">
-            most important work
-          </span>
-        </h1>
-        <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          A minimalist productivity sanctuary harmonizing Pomodoro intervals, task
-          priorities, streak heatmaps, and markdown journaling into one distraction-free interface.
-        </p>
-      </motion.div>
-
-      {/* Call to Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-        className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2"
-      >
-        <Link
-          href="/signup"
-          className={cn(
-            buttonVariants({ variant: "default", size: "lg" }),
-            "w-full sm:w-auto gap-2 px-7 h-11 text-sm font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all cursor-pointer group"
-          )}
-        >
-          <span>Start Focusing Free</span>
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-        </Link>
-        <Link
-          href="/login"
-          className={cn(
-            buttonVariants({ variant: "outline", size: "lg" }),
-            "w-full sm:w-auto gap-2 px-6 h-11 text-sm font-medium border-border/80 hover:bg-muted/60 transition-colors cursor-pointer"
-          )}
-        >
-          <LogIn className="h-4 w-4 text-muted-foreground" />
-          <span>Sign In</span>
-        </Link>
-      </motion.div>
-
-      {/* Value badges micro-row */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 pt-4 text-xs text-muted-foreground"
-      >
-        <div className="flex items-center gap-1.5">
-          <Sparkles className="size-3.5 text-primary" />
-          <span>Zero Bloat</span>
+    <section className="relative grid items-center gap-10 pb-16 pt-5 sm:pb-24 sm:pt-12 lg:grid-cols-[0.94fr_1.06fr] lg:gap-12">
+      <motion.div initial={reduceMotion ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: "easeOut" }} className="relative z-10 max-w-2xl space-y-6 text-center lg:text-left">
+        <div className="zen-kicker"><span className="size-1.5 rounded-full bg-[var(--zen-tea)] shadow-[0_0_0_4px_color-mix(in_oklch,var(--zen-tea)_14%,transparent)]" /><span>残心 · A mindful focus workspace</span></div>
+        <div className="space-y-5">
+          <h1 className="font-display text-5xl leading-[0.98] tracking-[-0.045em] text-foreground sm:text-6xl md:text-7xl">Make room for<span className="block italic text-[color:var(--zen-indigo)] dark:text-indigo-300"> your best attention.</span></h1>
+          <p className="max-w-xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8 lg:mx-0">Zanshin brings your focus sessions, tasks, habits, and reflections into one calm rhythm—so your most important work can stay in view.</p>
         </div>
-        <span className="text-muted-foreground/30">•</span>
-        <div className="flex items-center gap-1.5">
-          <span className="size-1.5 rounded-full bg-emerald-500" />
-          <span>True Streak Heatmaps</span>
+        <div className="flex flex-col items-stretch gap-3 pt-1 sm:flex-row sm:items-center sm:justify-center lg:justify-start">
+          <Link href="/signup" className={cn(buttonVariants({ size: "lg" }), "zen-focus-ring h-12 gap-2 rounded-full px-6 text-sm font-semibold shadow-md transition-transform hover:-translate-y-0.5")}>Start focusing free <ArrowRight className="size-4" /></Link>
+          <a href="#workspace" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "zen-focus-ring h-12 rounded-full border-border/80 px-6 text-sm font-medium")}>Explore the workspace</a>
         </div>
-        <span className="text-muted-foreground/30">•</span>
-        <div className="flex items-center gap-1.5">
-          <span className="size-1.5 rounded-full bg-primary" />
-          <span>Ambient Audio Soundscapes</span>
+        <ul className="flex flex-wrap justify-center gap-x-5 gap-y-2 pt-2 text-xs text-muted-foreground lg:justify-start" aria-label="Product highlights">
+          {signals.map((signal) => <li key={signal} className="flex items-center gap-1.5"><Check className="size-3.5 text-[var(--zen-tea)]" />{signal}</li>)}
+        </ul>
+      </motion.div>
+
+      <motion.div initial={reduceMotion ? false : { opacity: 0, scale: 0.97, y: 18 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.65, delay: reduceMotion ? 0 : 0.1, ease: "easeOut" }} className="relative mx-auto w-full max-w-2xl lg:max-w-none">
+        <div className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-[radial-gradient(circle_at_45%_45%,color-mix(in_oklch,var(--zen-indigo)_20%,transparent),transparent_66%)] blur-2xl" />
+        <div className="zen-panel overflow-hidden rounded-2xl p-1.5 sm:rounded-3xl sm:p-2">
+          <div className="overflow-hidden rounded-xl border border-border/70 bg-background sm:rounded-2xl">
+            <div className="flex items-center justify-between border-b border-border/60 bg-muted/35 px-4 py-3">
+              <div className="flex gap-1.5" aria-hidden="true"><span className="size-2.5 rounded-full bg-rose-400/80" /><span className="size-2.5 rounded-full bg-amber-400/80" /><span className="size-2.5 rounded-full bg-[var(--zen-tea)]/80" /></div>
+              <div className="hidden items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1 font-mono text-[10px] text-muted-foreground sm:flex"><Sparkles className="size-3 text-[var(--zen-indigo)]" />Your focus, in view</div>
+              <span className="font-mono text-[10px] text-[var(--zen-tea)]">LIVE SPACE</span>
+            </div>
+            <Image src="/images/dashboard-preview-light.png" alt="Zanshin Focus dashboard showing focus, task, habit, and reflection summaries in light mode" width={1499} height={1024} priority sizes="(max-width: 1024px) 100vw, 54vw" className="block h-auto w-full dark:hidden" />
+            <Image src="/images/dashboard-preview-dark.png" alt="Zanshin Focus dashboard showing focus, task, habit, and reflection summaries in dark mode" width={1518} height={1018} priority sizes="(max-width: 1024px) 100vw, 54vw" className="hidden h-auto w-full dark:block" />
+          </div>
         </div>
       </motion.div>
     </section>

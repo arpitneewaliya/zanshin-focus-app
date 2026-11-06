@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export function FooterSection() {
   return (
-    <footer className="pt-8 pb-12 border-t border-border/50 text-xs text-muted-foreground">
+    <footer className="border-t border-border/50 pb-12 pt-8 text-xs text-muted-foreground">
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 max-w-5xl mx-auto">
         <div className="flex items-center gap-2">
           <span className="size-2 rounded-full bg-primary" />
@@ -30,7 +30,7 @@ export function FooterSection() {
             Sign Up
           </Link>
           <a
-            href="https://github.com"
+            href="https://github.com/arpitneewaliya/zanshin-focus-app"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-foreground transition-colors"
