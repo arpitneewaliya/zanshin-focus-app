@@ -146,6 +146,7 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
             completedThisWeekCount: 0,
             overdueCount: 0,
             totalCount: 0,
+            recentTasks: [],
           },
           habits: [],
           journal: {
@@ -154,12 +155,14 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
             totalEntriesCount: 0,
           },
           isGuest: true,
+          userName: null,
         },
       };
     }
 
     // Execute queries in parallel for peak efficiency
     const [
+      userRecord,
       pomodoroSessions,
       tasksRaw,
       habitsRaw,
@@ -167,6 +170,12 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
       journalEntriesThisWeek,
       totalJournalEntries,
     ] = await Promise.all([
+      // 0. User Profile
+      prisma.user.findUnique({
+        where: { id: user.id },
+        select: { name: true },
+      }),
+
       // 1. Pomodoro sessions in the last 7 days
       prisma.pomodoroSession.findMany({
         where: {
@@ -187,10 +196,17 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
         where: { userId: user.id },
         select: {
           id: true,
+          title: true,
           completed: true,
           dueDate: true,
+          priority: true,
           createdAt: true,
         },
+        orderBy: [
+          { completed: "asc" },
+          { dueDate: "asc" },
+          { createdAt: "desc" },
+        ],
       }),
 
       // 3. Active habits with their completion logs
@@ -301,6 +317,17 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
       }
     }
 
+    const recentTasks = tasksRaw
+      .filter((t) => !t.completed)
+      .slice(0, 4)
+      .map((t) => ({
+        id: t.id,
+        title: t.title,
+        priority: t.priority as "low" | "medium" | "high",
+        dueDate: t.dueDate ? t.dueDate.toISOString().split("T")[0] : null,
+        completed: t.completed,
+      }));
+
     // ─────────────────────────────────────────────────────────
     // Habit Calculations (Reusing features/habit-tracker/utils)
     // ─────────────────────────────────────────────────────────
@@ -309,10 +336,14 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
       const logs = raw.completionLogs.map(formatCompletionLog);
       const streak = calculateHabitStreak(habit, logs, todayStr);
       const miniGrid = getHeatmapGrid(habit, logs, 5); // 5 weeks (~35 days)
+      const completedToday = logs.some(
+        (l) => l.date === todayStr && l.status === "completed"
+      );
       return {
         habit,
         streak,
         miniGrid,
+        completedToday,
       };
     });
 
@@ -327,6 +358,13 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
           updatedAt: recentJournalEntry.updatedAt.toISOString(),
         }
       : null;
+
+    const userName =
+      userRecord?.name ||
+      user.user_metadata?.name ||
+      user.user_metadata?.full_name ||
+      user.email?.split("@")[0] ||
+      null;
 
     return {
       success: true,
@@ -346,6 +384,7 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
           completedThisWeekCount,
           overdueCount,
           totalCount: tasksRaw.length,
+          recentTasks,
         },
         habits,
         journal: {
@@ -354,6 +393,7 @@ export async function getDashboardData(): Promise<ActionResult<DashboardData>> {
           totalEntriesCount: totalJournalEntries,
         },
         isGuest: false,
+        userName,
       },
     };
   } catch (error) {

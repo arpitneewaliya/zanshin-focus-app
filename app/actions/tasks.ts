@@ -114,6 +114,7 @@ export async function createTask(data: {
     });
 
     revalidatePath("/tasks");
+    revalidatePath("/dashboard");
 
     return {
       success: true,
@@ -186,6 +187,7 @@ export async function updateTask(
     });
 
     revalidatePath("/tasks");
+    revalidatePath("/dashboard");
 
     return {
       success: true,
@@ -225,6 +227,7 @@ export async function deleteTask(id: string): Promise<ActionResult<{ id: string 
     });
 
     revalidatePath("/tasks");
+    revalidatePath("/dashboard");
 
     return {
       success: true,
@@ -267,6 +270,7 @@ export async function toggleTaskComplete(id: string): Promise<ActionResult<Task>
     });
 
     revalidatePath("/tasks");
+    revalidatePath("/dashboard");
 
     return {
       success: true,
@@ -301,6 +305,7 @@ export async function clearCompletedTasks(): Promise<ActionResult<{ count: numbe
     });
 
     revalidatePath("/tasks");
+    revalidatePath("/dashboard");
 
     return {
       success: true,

@@ -25,6 +25,7 @@ const defaultEmptyData: DashboardData = {
     completedThisWeekCount: 0,
     overdueCount: 0,
     totalCount: 0,
+    recentTasks: [],
   },
   habits: [],
   journal: {
@@ -33,6 +34,7 @@ const defaultEmptyData: DashboardData = {
     totalEntriesCount: 0,
   },
   isGuest: true,
+  userName: null,
 };
 
 export default async function DashboardPage() {

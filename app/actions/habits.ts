@@ -154,6 +154,7 @@ export async function createHabit(data: {
     });
 
     revalidatePath("/habit-tracker");
+    revalidatePath("/dashboard");
 
     return {
       success: true,
@@ -224,6 +225,7 @@ export async function updateHabit(
     });
 
     revalidatePath("/habit-tracker");
+    revalidatePath("/dashboard");
 
     return {
       success: true,
@@ -264,6 +266,7 @@ export async function archiveHabit(id: string): Promise<ActionResult<Habit>> {
     });
 
     revalidatePath("/habit-tracker");
+    revalidatePath("/dashboard");
 
     return {
       success: true,
@@ -304,6 +307,7 @@ export async function unarchiveHabit(id: string): Promise<ActionResult<Habit>> {
     });
 
     revalidatePath("/habit-tracker");
+    revalidatePath("/dashboard");
 
     return {
       success: true,
@@ -343,6 +347,7 @@ export async function deleteHabit(id: string): Promise<ActionResult<{ id: string
     });
 
     revalidatePath("/habit-tracker");
+    revalidatePath("/dashboard");
 
     return {
       success: true,
@@ -402,6 +407,7 @@ export async function upsertCompletionLog(
     });
 
     revalidatePath("/habit-tracker");
+    revalidatePath("/dashboard");
 
     return {
       success: true,
@@ -450,6 +456,7 @@ export async function deleteCompletionLog(
     });
 
     revalidatePath("/habit-tracker");
+    revalidatePath("/dashboard");
 
     return {
       success: true,
