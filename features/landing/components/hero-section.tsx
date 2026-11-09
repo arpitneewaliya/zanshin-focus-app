@@ -38,8 +38,8 @@ export function HeroSection() {
               <div className="hidden items-center gap-2 rounded-full border border-border/70 bg-background/80 px-3 py-1 font-mono text-[10px] text-muted-foreground sm:flex"><Sparkles className="size-3 text-[var(--zen-indigo)]" />Your focus, in view</div>
               <span className="font-mono text-[10px] text-[var(--zen-tea)]">LIVE SPACE</span>
             </div>
-            <Image src="/images/dashboard-preview-light.png" alt="Zanshin Focus dashboard showing focus, task, habit, and reflection summaries in light mode" width={1499} height={1024} priority sizes="(max-width: 1024px) 100vw, 54vw" className="block h-auto w-full dark:hidden" />
-            <Image src="/images/dashboard-preview-dark.png" alt="Zanshin Focus dashboard showing focus, task, habit, and reflection summaries in dark mode" width={1518} height={1018} priority sizes="(max-width: 1024px) 100vw, 54vw" className="hidden h-auto w-full dark:block" />
+            <Image src="/images/dashboard-preview-light1.png" alt="Zanshin Focus dashboard showing focus, task, habit, and reflection summaries in light mode" width={1499} height={1024} priority sizes="(max-width: 1024px) 100vw, 54vw" className="block h-auto w-full dark:hidden" />
+            <Image src="/images/dashboard-preview-dark1.png" alt="Zanshin Focus dashboard showing focus, task, habit, and reflection summaries in dark mode" width={1518} height={1018} priority sizes="(max-width: 1024px) 100vw, 54vw" className="hidden h-auto w-full dark:block" />
           </div>
         </div>
       </motion.div>

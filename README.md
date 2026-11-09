@@ -115,15 +115,15 @@ Most productivity setups are a pile of disconnected tools: a timer here, a to-do
 
 | Dashboard | Timer |
 | :---: | :---: |
-| ![Dashboard](./public/images/dashboard-preview-dark.png) | ![Timer](./public/images/timer-preview-dark.png) |
+| ![Dashboard](./public/images/dashboard-preview-dark1.png) | ![Timer](./public/images/timer-preview-dark.png) |
 
 | Tasks | Habits |
 | :---: | :---: |
-| ![Tasks](./public/images/tasks-preview-dark.png) | ![Habits](./public/images/habits-preview-dark.png) |
+| ![Tasks](./public/images/tasks-preview-dark1.png) | ![Habits](./public/images/habits-preview-dark1.png) |
 
 | Journal | Focus Mode |
 | :---: | :---: |
-| ![Journal](./public/images/journal-preview-dark.png) | ![Focus Mode](./public/images/focus-mode-preview-dark.png) |
+| ![Journal](./public/images/journal-preview-dark1.png) | ![Focus Mode](./public/images/focus-mode-preview-dark1.png) |
 
 Light-mode variants are available as `*-preview-light.png` in the same folder.
 
