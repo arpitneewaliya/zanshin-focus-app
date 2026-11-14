@@ -6,9 +6,5 @@ export const metadata = {
 };
 
 export default function SignUpPage() {
-  return (
-    <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center py-8">
-      <SignUpForm />
-    </div>
-  );
+  return <SignUpForm />;
 }

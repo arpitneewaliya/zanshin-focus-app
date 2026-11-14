@@ -10,6 +10,11 @@ import { UserNav } from "@/components/user-nav";
 
 export function SiteHeader() {
   const pathname = usePathname();
+
+  if (pathname === "/login" || pathname === "/signup") {
+    return null;
+  }
+
   const isLandingPage = pathname === "/";
 
   return (

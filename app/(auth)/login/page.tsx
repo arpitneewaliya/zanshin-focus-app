@@ -8,10 +8,8 @@ export const metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-[calc(100vh-12rem)] flex items-center justify-center py-8">
-      <Suspense fallback={<div className="h-96 w-full max-w-md bg-muted/20 animate-pulse rounded-2xl" />}>
-        <LoginForm />
-      </Suspense>
-    </div>
+    <Suspense fallback={<div className="h-96 w-full animate-pulse rounded-2xl bg-muted/20" />}>
+      <LoginForm />
+    </Suspense>
   );
 }

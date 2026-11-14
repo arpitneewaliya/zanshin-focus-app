@@ -4,18 +4,10 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertCircle, Mail, Lock, ArrowRight } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { motion } from "motion/react";
 
 function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -40,6 +32,9 @@ function GoogleIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
+
+const underlineInputClass =
+  "h-11 rounded-none border-x-0 border-t-0 border-b border-border/80 bg-transparent px-0 text-sm shadow-none placeholder:text-muted-foreground/70 focus-visible:border-foreground focus-visible:ring-0 dark:bg-transparent transition-colors";
 
 export function LoginForm() {
   const router = useRouter();
@@ -109,129 +104,120 @@ export function LoginForm() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 15 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
-      className="w-full max-w-md mx-auto"
+      className="w-full"
     >
-      <Card className="border-border/60 bg-card/95 backdrop-blur-md shadow-xl">
-        <CardHeader className="space-y-1.5 text-center pb-6">
-          <CardTitle className="text-2xl font-bold tracking-tight">
-            Welcome back
-          </CardTitle>
-          <CardDescription className="text-sm text-muted-foreground">
-            Sign in to your Zanshin Focus account to sync your session
-          </CardDescription>
-        </CardHeader>
+      {/* Header */}
+      <div className="text-center space-y-2 mb-10">
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
+          Login
+        </h1>
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          Sign in to your Zanshin Focus sanctuary
+        </p>
+      </div>
 
-        <CardContent className="space-y-4">
-          {/* OAuth Button */}
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleGoogleSignIn}
+      {/* Inline Error Message */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mb-6 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-2.5"
+        >
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span className="leading-snug">{error}</span>
+        </motion.div>
+      )}
+
+      {/* Email / Password Form */}
+      <form onSubmit={handleEmailSignIn} className="space-y-7">
+        <div>
+          <Label htmlFor="email" className="sr-only">
+            Email address
+          </Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="Email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             disabled={isLoading || isGoogleLoading}
-            className="w-full h-10 gap-2 font-medium border-border/80 hover:bg-muted/60 transition-colors cursor-pointer"
-          >
-            {isGoogleLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            ) : (
-              <GoogleIcon className="h-4 w-4" />
-            )}
-            <span>Continue with Google</span>
-          </Button>
+            className={underlineInputClass}
+            required
+          />
+        </div>
 
-          {/* Divider */}
-          <div className="relative flex items-center justify-center my-4">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border/60" />
-            </div>
-            <div className="relative px-3 bg-card text-xs uppercase tracking-wider text-muted-foreground/80 font-medium">
-              or email
-            </div>
-          </div>
+        <div>
+          <Label htmlFor="password" className="sr-only">
+            Password
+          </Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="Password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={isLoading || isGoogleLoading}
+            className={underlineInputClass}
+            required
+          />
+        </div>
 
-          {/* Inline Error Message */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs flex items-start gap-2.5"
-            >
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              <span className="leading-snug">{error}</span>
-            </motion.div>
+        <Button
+          type="submit"
+          disabled={isLoading || isGoogleLoading}
+          className="w-full h-11 rounded-full font-medium text-sm shadow-md cursor-pointer mt-2"
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <span>Login</span>
           )}
+        </Button>
+      </form>
 
-          {/* Form */}
-          <form onSubmit={handleEmailSignIn} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="email" className="text-xs font-medium">
-                Email address
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/60" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading || isGoogleLoading}
-                  className="pl-9 h-10"
-                  required
-                />
-              </div>
-            </div>
+      {/* Divider */}
+      <div className="relative flex items-center justify-center my-7">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-border/60" />
+        </div>
+        <div className="relative px-3 bg-background text-[11px] uppercase tracking-widest text-muted-foreground/80 font-medium">
+          or
+        </div>
+      </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="password" className="text-xs font-medium">
-                Password
-              </Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground/60" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading || isGoogleLoading}
-                  className="pl-9 h-10"
-                  required
-                />
-              </div>
-            </div>
+      {/* OAuth Button */}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleGoogleSignIn}
+        disabled={isLoading || isGoogleLoading}
+        className="w-full h-11 rounded-full gap-2.5 font-medium border-border/80 bg-transparent hover:bg-muted/50 transition-colors cursor-pointer"
+      >
+        {isGoogleLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        ) : (
+          <GoogleIcon className="h-4 w-4" />
+        )}
+        <span>Continue with Google</span>
+      </Button>
 
-            <Button
-              type="submit"
-              disabled={isLoading || isGoogleLoading}
-              className="w-full h-10 gap-2 font-medium cursor-pointer"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </form>
-        </CardContent>
-
-        <CardFooter className="flex justify-center border-t border-border/40 py-4">
-          <p className="text-xs text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link
-              href="/signup"
-              className="font-semibold text-primary hover:underline underline-offset-4"
-            >
-              Sign up
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+      {/* Footer Link */}
+      <div className="mt-10 text-center">
+        <p className="text-xs text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/signup"
+            className="font-semibold text-foreground hover:underline underline-offset-4"
+          >
+            Sign up
+          </Link>
+        </p>
+      </div>
     </motion.div>
   );
 }
