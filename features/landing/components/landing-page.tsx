@@ -10,7 +10,7 @@ import { FooterSection } from "./footer-section";
 
 export function LandingPage() {
   return (
-    <div className="zen-landing w-full overflow-hidden">
+    <div className="zen-landing w-full">
       <HeroSection />
       <VisualCenterpiece />
       <FeatureGrid />

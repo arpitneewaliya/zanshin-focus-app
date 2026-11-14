@@ -13,7 +13,14 @@ export function SiteHeader() {
   const isLandingPage = pathname === "/";
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/82 backdrop-blur-xl">
+    <header
+      className={cn(
+        "sticky top-0 z-50 w-full border-b backdrop-blur-xl transition-colors",
+        isLandingPage
+          ? "border-border/40 bg-background/65"
+          : "border-border/50 bg-background/82"
+      )}
+    >
       <div className="container mx-auto flex h-15 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
