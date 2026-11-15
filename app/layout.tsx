@@ -22,9 +22,50 @@ const playfairDisplay = Playfair_Display({
   variable: "--font-editorial",
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
+
+const ogTitle = "Zanshin Focus — Unshakeable Focus for Deep Work";
+const ogDescription =
+  "Minimalist, distraction-free productivity sanctuary combining Pomodoro Timer, Task Manager, Habit Heatmaps, Personal Journal, and Ambient Focus Mode.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Zanshin Focus",
-  description: "Minimalist, distraction-free productivity workspace combining Pomodoro Timer, Task Manager, Personal Journal, and Focus Mode.",
+  description:
+    "Minimalist, distraction-free productivity workspace combining Pomodoro Timer, Task Manager, Personal Journal, and Focus Mode.",
+  openGraph: {
+    title: ogTitle,
+    description: ogDescription,
+    url: "/",
+    siteName: "Zanshin Focus",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Zanshin Focus — Unshakeable Focus for Deep Work",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: ogTitle,
+    description: ogDescription,
+    images: [
+      {
+        url: "/og-image.png",
+        alt: "Zanshin Focus — Unshakeable Focus for Deep Work",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
